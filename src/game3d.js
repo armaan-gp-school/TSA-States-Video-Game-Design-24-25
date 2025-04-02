@@ -474,6 +474,9 @@ function startLevel(levelNumber) {
         window.addEventListener('resize', onWindowResize);
     }
     
+    // Update background for this level
+    updateLevelBackground(levelNumber);
+    
     // Reset game state
     resetGameState();
     
@@ -530,6 +533,9 @@ function restartCurrentLevel() {
     // Hide all screens and show game screen
     hideAllScreens();
     gameScreen.classList.remove("hidden");
+    
+    // Make sure the correct level background is used
+    updateLevelBackground(currentLevel);
     
     // Setup the level with the first word (1/5)
     setupLevel(1);
@@ -698,16 +704,24 @@ function createSkybox() {
     }
     
     const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterials);
+    skybox.name = "skybox"; // Add name for easy reference
     scene.add(skybox);
 }
 
 // Create stars for the background
 function createStars() {
+    // Remove any existing stars first
+    const existingStars = scene.children.find(child => child.name === "stars");
+    if (existingStars) {
+        scene.remove(existingStars);
+    }
+
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({
         color: 0xffffff,
         size: 0.1,
-        transparent: true
+        transparent: true,
+        opacity: 1.0
     });
     
     const starsVertices = [];
@@ -720,6 +734,7 @@ function createStars() {
     
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
     const stars = new THREE.Points(starsGeometry, starsMaterial);
+    stars.name = "stars"; // Add name for easy reference
     scene.add(stars);
 }
 
@@ -2186,12 +2201,25 @@ function showFloatingText(text, position, color, playerColor) {
 function gameLoop() {
     if (!gameRunning) return;
     
+    // Update player positions
     updatePlayers();
+    
+    // Update letter meshes
     animateLetters();
+    
+    // Check collisions
     checkCollisions();
     
+    // Update planetary objects if any
+    const planet = scene.children.find(child => child.name === "planet");
+    if (planet && planet.userData.rotationSpeed) {
+        planet.rotation.y += planet.userData.rotationSpeed;
+    }
+    
+    // Render the scene
     renderer.render(scene, camera);
     
+    // Continue the game loop
     requestAnimationFrame(gameLoop);
 }
 
@@ -2334,3 +2362,653 @@ function loadGameProgress() {
 
 // Initialize the game when the page loads
 window.addEventListener("load", init); 
+
+// Update the scene background based on the current level
+function updateLevelBackground(levelNumber) {
+    console.log("Updating background for level:", levelNumber);
+    
+    // If no scene, return early
+    if (!scene) {
+        console.error("Cannot update background: Scene not initialized");
+        return;
+    }
+    
+    // Remove existing planetary objects
+    const existingPlanets = scene.children.filter(child => child.name === "planet" || child.name === "planetaryObject");
+    existingPlanets.forEach(planet => {
+        scene.remove(planet);
+    });
+    
+    // Space level (default)
+    if (levelNumber === 1) {
+        scene.background = new THREE.Color(0x000005);
+        scene.fog = new THREE.Fog(0x000005, 15, 40);
+        // Make sure stars are visible
+        const stars = scene.children.find(child => child.name === "stars");
+        if (stars) stars.visible = true;
+        return;
+    }
+    
+    // Find existing skybox
+    const skybox = scene.children.find(child => child.name === "skybox");
+    if (skybox) {
+        skybox.visible = false; // Hide default skybox for planetary backgrounds
+    }
+    
+    // Find existing stars
+    const stars = scene.children.find(child => child.name === "stars");
+    if (stars) stars.visible = true; // Keep stars visible for all levels but may adjust visibility later
+    
+    // Create a planet object based on level
+    let planetSize, planetColor, atmosphereColor, planetPos, bgColor;
+    
+    switch(levelNumber) {
+        case 2: // Earth
+            planetSize = 40; // Larger size
+            planetColor = 0x1a66ff; // Blue
+            atmosphereColor = 0x6bb2ff; // Light blue
+            planetPos = new THREE.Vector3(0, 0, -55); // Better balanced position
+            bgColor = 0x000020; // Deep space blue
+            break;
+            
+        case 3: // Mars
+            planetSize = 35; // Larger size
+            planetColor = 0xcc3300; // Red-orange
+            atmosphereColor = 0xff9966; // Dusty orange
+            planetPos = new THREE.Vector3(0, 0, -53); // Better balanced position
+            bgColor = 0x100804; // Dark red-tinted space
+            break;
+            
+        case 4: // Jupiter
+            planetSize = 55; // Larger size
+            planetColor = 0xcd8500; // Sandy brown
+            atmosphereColor = 0xffd700; // Gold for bands
+            planetPos = new THREE.Vector3(0, 0, -75); // Better balanced position
+            bgColor = 0x0a0a10; // Very dark blue
+            break;
+            
+        case 5: // Pluto
+            planetSize = 25; // Larger size
+            planetColor = 0xcccccc; // Gray
+            atmosphereColor = 0xe6e6e6; // Light gray
+            planetPos = new THREE.Vector3(0, 0, -40); // Better balanced position
+            bgColor = 0x000006; // Almost black
+            break;
+            
+        default:
+            console.warn(`Invalid level number: ${levelNumber}`);
+            return; // Invalid level
+    }
+    
+    // Update scene background and fog color
+    scene.background = new THREE.Color(bgColor);
+    scene.fog = new THREE.Fog(bgColor, 15, 40);
+    
+    console.log(`Creating planet for level ${levelNumber} with size ${planetSize}`);
+    
+    // Create planet sphere
+    const planetGeometry = new THREE.SphereGeometry(planetSize, 64, 64);
+    
+    // For Earth and Mars, create a textured material
+    let planetMaterial;
+    if (levelNumber === 2) { // Earth
+        // Create Earth with blue oceans and green landmasses
+        const earthCanvas = document.createElement('canvas');
+        earthCanvas.width = 1024;
+        earthCanvas.height = 512;
+        const ctx = earthCanvas.getContext('2d');
+        
+        // Fill the background with deep blue (oceans)
+        const gradient = ctx.createLinearGradient(0, 0, 0, earthCanvas.height);
+        gradient.addColorStop(0, '#0a3b8c'); // Deeper blue at poles
+        gradient.addColorStop(0.5, '#1a66ff'); // Blue at equator
+        gradient.addColorStop(1, '#0a3b8c'); // Deeper blue at poles
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, earthCanvas.width, earthCanvas.height);
+        
+        // Draw green continents (more detailed)
+        // North America
+        ctx.fillStyle = '#2d862d';
+        ctx.beginPath();
+        ctx.moveTo(200, 150);
+        ctx.lineTo(280, 120);
+        ctx.lineTo(320, 180);
+        ctx.lineTo(300, 200);
+        ctx.lineTo(340, 240);
+        ctx.lineTo(280, 280);
+        ctx.lineTo(240, 260);
+        ctx.lineTo(220, 220);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add brown mountain ranges
+        ctx.fillStyle = '#8B4513';
+        ctx.beginPath();
+        ctx.moveTo(240, 180);
+        ctx.lineTo(250, 210);
+        ctx.lineTo(230, 230);
+        ctx.closePath();
+        ctx.fill();
+        
+        // South America
+        ctx.fillStyle = '#227722';
+        ctx.beginPath();
+        ctx.moveTo(320, 250);
+        ctx.lineTo(340, 280);
+        ctx.lineTo(350, 350);
+        ctx.lineTo(330, 380);
+        ctx.lineTo(300, 400);
+        ctx.lineTo(280, 350);
+        ctx.lineTo(290, 300);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add Amazon rainforest (darker green)
+        ctx.fillStyle = '#0c5c0c';
+        ctx.beginPath();
+        ctx.moveTo(310, 280);
+        ctx.lineTo(330, 310);
+        ctx.lineTo(320, 350);
+        ctx.lineTo(300, 330);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Europe
+        ctx.fillStyle = '#2d862d';
+        ctx.beginPath();
+        ctx.moveTo(500, 150);
+        ctx.lineTo(530, 140);
+        ctx.lineTo(550, 170);
+        ctx.lineTo(530, 200);
+        ctx.lineTo(510, 190);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Africa
+        ctx.fillStyle = '#7d9331'; // olive green for savanna
+        ctx.beginPath();
+        ctx.moveTo(500, 200);
+        ctx.lineTo(550, 220);
+        ctx.lineTo(560, 300);
+        ctx.lineTo(520, 350);
+        ctx.lineTo(490, 330);
+        ctx.lineTo(480, 250);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add Sahara desert (tan)
+        ctx.fillStyle = '#c2b280';
+        ctx.beginPath();
+        ctx.moveTo(490, 220);
+        ctx.lineTo(540, 230);
+        ctx.lineTo(530, 270);
+        ctx.lineTo(500, 260);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Asia
+        ctx.fillStyle = '#2d862d';
+        ctx.beginPath();
+        ctx.moveTo(550, 140);
+        ctx.lineTo(650, 130);
+        ctx.lineTo(700, 150);
+        ctx.lineTo(750, 180);
+        ctx.lineTo(730, 240);
+        ctx.lineTo(670, 250);
+        ctx.lineTo(630, 220);
+        ctx.lineTo(570, 180);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add Himalayan mountains (brown)
+        ctx.fillStyle = '#8B4513';
+        ctx.beginPath();
+        ctx.moveTo(620, 200);
+        ctx.lineTo(660, 210);
+        ctx.lineTo(640, 230);
+        ctx.lineTo(610, 220);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Australia
+        ctx.fillStyle = '#b36b00'; // reddish for outback
+        ctx.beginPath();
+        ctx.moveTo(700, 350);
+        ctx.lineTo(760, 340);
+        ctx.lineTo(770, 380);
+        ctx.lineTo(740, 410);
+        ctx.lineTo(710, 390);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add greener coastal areas
+        ctx.fillStyle = '#2d862d';
+        ctx.beginPath();
+        ctx.arc(710, 350, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(760, 380, 12, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add white for polar ice caps
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(512, 30, 120, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(512, 482, 120, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add some cloud patterns with variation
+        for (let i = 0; i < 15; i++) {
+            const x = Math.random() * earthCanvas.width;
+            const y = 100 + Math.random() * 312; // Keep clouds away from poles
+            const size = 15 + Math.random() * 40;
+            const opacity = 0.6 + Math.random() * 0.4;
+            
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            
+            // Create cloud clusters
+            for (let j = 0; j < 3 + Math.floor(Math.random() * 3); j++) {
+                const offsetX = (Math.random() - 0.5) * 30;
+                const offsetY = (Math.random() - 0.5) * 20;
+                const cloudSize = size * (0.7 + Math.random() * 0.6);
+                
+                ctx.beginPath();
+                ctx.arc(x + offsetX, y + offsetY, cloudSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        const texture = new THREE.CanvasTexture(earthCanvas);
+        planetMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: false,
+            opacity: 1.0
+        });
+    } else if (levelNumber === 3) { // Mars
+        // Create Mars with red surface, craters, and polar caps
+        const marsCanvas = document.createElement('canvas');
+        marsCanvas.width = 1024;
+        marsCanvas.height = 512;
+        const ctx = marsCanvas.getContext('2d');
+        
+        // Fill the background with varied rust red (Mars surface)
+        const gradient = ctx.createRadialGradient(
+            marsCanvas.width/2, marsCanvas.height/2, 50,
+            marsCanvas.width/2, marsCanvas.height/2, marsCanvas.width/2
+        );
+        gradient.addColorStop(0, '#d94e16'); // Brighter center
+        gradient.addColorStop(0.6, '#b73000'); // Standard rust
+        gradient.addColorStop(1, '#8b2500'); // Darker edges
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, marsCanvas.width, marsCanvas.height);
+        
+        // Add darker areas (maria)
+        ctx.fillStyle = '#681a00';
+        for (let i = 0; i < 12; i++) {
+            const x = Math.random() * marsCanvas.width;
+            const y = Math.random() * marsCanvas.height;
+            const size = 40 + Math.random() * 100;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add Valles Marineris (Grand Canyon of Mars)
+        ctx.fillStyle = '#541400';
+        ctx.beginPath();
+        ctx.moveTo(400, 240);
+        ctx.lineTo(700, 230);
+        ctx.lineTo(680, 270);
+        ctx.lineTo(420, 280);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add Olympus Mons (largest volcano)
+        const centerX = 300;
+        const centerY = 240;
+        // Create gradient for the volcano
+        const volcanoGradient = ctx.createRadialGradient(
+            centerX, centerY, 0,
+            centerX, centerY, 80
+        );
+        volcanoGradient.addColorStop(0, '#ff6600'); // Bright at center
+        volcanoGradient.addColorStop(0.3, '#cc3300'); // Mid red
+        volcanoGradient.addColorStop(1, '#8b2500'); // Dark at edges
+        
+        // Draw the volcano base
+        ctx.fillStyle = volcanoGradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 80, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw the caldera (crater at top)
+        ctx.fillStyle = '#3d0e00';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 25, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add craters
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * marsCanvas.width;
+            const y = Math.random() * marsCanvas.height;
+            const size = 5 + Math.random() * 30;
+            
+            // Crater rim (lighter)
+            ctx.fillStyle = '#ff6600';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Crater interior (darker)
+            ctx.fillStyle = '#3d0e00';
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add white for polar ice caps
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(512, 30, 80, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(512, 482, 80, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add surface dust storms
+        ctx.fillStyle = 'rgba(255, 153, 102, 0.3)';
+        for (let i = 0; i < 5; i++) {
+            const x = Math.random() * marsCanvas.width;
+            const y = 100 + Math.random() * 312;
+            const size = 40 + Math.random() * 100;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        const texture = new THREE.CanvasTexture(marsCanvas);
+        planetMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: false,
+            opacity: 1.0
+        });
+    } else if (levelNumber === 4) { // Jupiter
+        // Create Jupiter with banded appearance
+        const jupiterCanvas = document.createElement('canvas');
+        jupiterCanvas.width = 1024;
+        jupiterCanvas.height = 512;
+        const ctx = jupiterCanvas.getContext('2d');
+        
+        // Create the bands
+        const bands = [
+            { color: '#cd8500', width: 30 },  // Sandy brown
+            { color: '#bf7300', width: 40 },  // Darker brown
+            { color: '#e69900', width: 25 },  // Orange
+            { color: '#aa6600', width: 35 },  // Dark orange
+            { color: '#ffd700', width: 45 },  // Gold
+            { color: '#996300', width: 30 },  // Brown
+            { color: '#e6ac00', width: 50 },  // Light orange
+            { color: '#b37700', width: 20 },  // Brown
+            { color: '#ffcc00', width: 35 },  // Yellow
+            { color: '#a36b00', width: 40 },  // Dark brown
+            { color: '#ffbf00', width: 30 },  // Amber
+            { color: '#bf7300', width: 45 },  // Brown
+            { color: '#ffd700', width: 25 },  // Gold
+            { color: '#996300', width: 40 }   // Dark brown
+        ];
+        
+        let y = 0;
+        for (const band of bands) {
+            ctx.fillStyle = band.color;
+            ctx.fillRect(0, y, jupiterCanvas.width, band.width);
+            y += band.width;
+            
+            // If we've gone past the canvas height, stop
+            if (y > jupiterCanvas.height) break;
+        }
+        
+        // Add the Great Red Spot
+        ctx.fillStyle = '#cc0000';
+        ctx.beginPath();
+        ctx.ellipse(300, 250, 100, 50, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add some turbulence/swirls
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * jupiterCanvas.width;
+            const y = Math.random() * jupiterCanvas.height;
+            const size = 10 + Math.random() * 30;
+            
+            // Get a color slightly darker than the band
+            const bandIndex = Math.floor(y / jupiterCanvas.height * bands.length);
+            if (bandIndex < bands.length) {
+                // Create a darker shade of the band color
+                ctx.fillStyle = bands[bandIndex].color + '99'; // Add transparency
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        const texture = new THREE.CanvasTexture(jupiterCanvas);
+        planetMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: false,
+            opacity: 1.0
+        });
+    } else if (levelNumber === 5) { // Pluto
+        // Create Pluto with its distinctive heart feature and more detailed terrain
+        const plutoCanvas = document.createElement('canvas');
+        plutoCanvas.width = 1024;
+        plutoCanvas.height = 512;
+        const ctx = plutoCanvas.getContext('2d');
+        
+        // Create a more interesting base texture with varied coloration
+        // Pluto has a mix of reddish-brown, gray, and white areas
+        const gradient = ctx.createRadialGradient(
+            plutoCanvas.width/2, plutoCanvas.height/2, 50,
+            plutoCanvas.width/2, plutoCanvas.height/2, plutoCanvas.width/2
+        );
+        gradient.addColorStop(0, '#a0a0a0'); // Light gray center
+        gradient.addColorStop(0.4, '#808080'); // Medium gray
+        gradient.addColorStop(0.7, '#706060'); // Slight reddish-gray
+        gradient.addColorStop(1, '#605050');   // Darker reddish-gray
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, plutoCanvas.width, plutoCanvas.height);
+        
+        // Add crater-like textures across the surface
+        for (let i = 0; i < 30; i++) {
+            const x = Math.random() * plutoCanvas.width;
+            const y = Math.random() * plutoCanvas.height;
+            const size = 10 + Math.random() * 40;
+            
+            // Create crater rim (slightly lighter)
+            ctx.fillStyle = '#909090';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Create crater interior (darker)
+            ctx.fillStyle = '#505050';
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add dark "whale" region (Cthulhu Macula) - the large dark area
+        ctx.fillStyle = '#3a3a3a';
+        ctx.beginPath();
+        ctx.ellipse(200, 250, 180, 140, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add texture to the dark region
+        ctx.fillStyle = '#303030';
+        for (let i = 0; i < 15; i++) {
+            const x = 150 + Math.random() * 200;
+            const y = 200 + Math.random() * 100;
+            const size = 10 + Math.random() * 25;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add distinctive reddish-brown regions (tholin-rich areas)
+        ctx.fillStyle = 'rgba(139, 69, 19, 0.6)';
+        for (let i = 0; i < 3; i++) {
+            const x = 200 + Math.random() * 600;
+            const y = 100 + Math.random() * 300;
+            const radiusX = 50 + Math.random() * 80;
+            const radiusY = 40 + Math.random() * 70;
+            ctx.beginPath();
+            ctx.ellipse(x, y, radiusX, radiusY, Math.random() * Math.PI, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Create the "Sputnik Planitia" (heart feature) with more detail
+        
+        // First, create the basic heart shape with a brighter white
+        ctx.fillStyle = '#ffffff';
+        
+        // Left lobe (Al-Idrisi Montes)
+        ctx.beginPath();
+        ctx.arc(450, 250, 100, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Right lobe (Tartarus Dorsa)
+        ctx.beginPath();
+        ctx.arc(580, 250, 100, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Connect the lobes
+        ctx.beginPath();
+        ctx.moveTo(450, 250);
+        ctx.lineTo(580, 250);
+        ctx.lineTo(580, 370);
+        ctx.lineTo(450, 370);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add cellular texture to the heart feature (nitrogen ice plains)
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 40; i++) {
+            const x = 400 + Math.random() * 230;
+            const y = 200 + Math.random() * 170;
+            const size = 15 + Math.random() * 30;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size, y + size/2);
+            ctx.lineTo(x + size/2, y + size);
+            ctx.lineTo(x - size/2, y + size/2);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        
+        // Add mountain ranges along the western edge of the heart (Hillary Montes)
+        ctx.fillStyle = '#d0d0d0';
+        for (let i = 0; i < 10; i++) {
+            const x = 370 + Math.random() * 30;
+            const y = 200 + Math.random() * 180;
+            const width = 10 + Math.random() * 20;
+            const height = 20 + Math.random() * 40;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y + height);
+            ctx.lineTo(x + width/2, y);
+            ctx.lineTo(x + width, y + height);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Add dark spots in the heart's right lobe (Voyager Terra)
+        ctx.fillStyle = '#b0b0b0';
+        for (let i = 0; i < 20; i++) {
+            const x = 550 + Math.random() * 80;
+            const y = 230 + Math.random() * 100;
+            const size = 5 + Math.random() * 15;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add darker pits in the nitrogen ice (sublimation pits)
+        ctx.fillStyle = '#c0c0c0';
+        for (let i = 0; i < 30; i++) {
+            const x = 420 + Math.random() * 180;
+            const y = 220 + Math.random() * 130;
+            const size = 3 + Math.random() * 8;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add the "bladed terrain" texture in the eastern regions (Tartarus Dorsa)
+        ctx.strokeStyle = '#909090';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 20; i++) {
+            const x = 650 + Math.random() * 200;
+            const y = 150 + Math.random() * 200;
+            const length = 20 + Math.random() * 40;
+            const angle = Math.random() * Math.PI;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+            ctx.stroke();
+        }
+        
+        const texture = new THREE.CanvasTexture(plutoCanvas);
+        planetMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: false,
+            opacity: 1.0
+        });
+    } else {
+        // Default material if no specific texture
+        planetMaterial = new THREE.MeshBasicMaterial({
+            color: planetColor,
+            transparent: false,
+            opacity: 1.0
+        });
+    }
+    
+    // Create the planet
+    const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+    planet.position.copy(planetPos);
+    planet.name = "planet";
+    
+    // Add lighting for better visibility - more even lighting from multiple directions
+    const planetLight = new THREE.PointLight(0xffffff, 1.5, 200);
+    planetLight.position.set(planetPos.x + 10, planetPos.y + 10, planetPos.z + 5);
+    planetLight.name = "planetLight";
+    scene.add(planetLight);
+    
+    // Add a second light from another direction for more even lighting
+    const planetLight2 = new THREE.PointLight(0xffffff, 1.0, 200);
+    planetLight2.position.set(planetPos.x - 10, planetPos.y - 5, planetPos.z + 15);
+    planetLight2.name = "planetLight2";
+    scene.add(planetLight2);
+    
+    // Add stronger ambient light to improve visibility of planets
+    if (!scene.children.find(child => child.name === "ambientLight")) {
+        const ambientLight = new THREE.AmbientLight(0x808080, 1.0); // Brighter ambient light
+        ambientLight.name = "ambientLight";
+        scene.add(ambientLight);
+    }
+    
+    // Adjust planet rotation for better visibility
+    planet.rotation.y = Math.PI / 4;
+    
+    // Add planet to scene
+    scene.add(planet);
+    
+    // Add a simple rotation animation for the planet
+    planet.userData.rotationSpeed = 0.001; // Speed of rotation
+    
+    console.log(`Created planet for level ${levelNumber} at position:`, planetPos);
+}
