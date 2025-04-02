@@ -1,0 +1,28 @@
+{
+  "name": "word-quest-the-lost-library",
+  "version": "1.0.0",
+  "description": "An educational word game for children to learn spelling and collaboration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "educational",
+    "game",
+    "children",
+    "spelling",
+    "multiplayer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "http": "^0.0.1-security",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7",
+    "three": "^0.159.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+} 

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Quest: Solar System Explorer</title>
+    <link rel="stylesheet" href="src/styles.css">
+    <link rel="icon" href="src/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <div id="start-screen" class="screen">
+            <div id="start-title-container">
+                <h1>Word Quest</h1>
+                <div id="start-subtitle">Solar System Explorer</div>
+                <div class="magic-line"></div>
+            </div>
+            <div class="menu">
+                <button id="start-btn" class="menu-button">Start Mission</button>
+                <button id="briefing-btn" class="menu-button">Briefing</button>
+            </div>
+        </div>
+        
+        <div id="briefing-screen" class="screen hidden">
+            <h2>Mission Briefing</h2>
+            <div class="briefing-content">
+                <p>Agents, the year is 2142. As members of the Galactic Exploration Corps, you must collaborate to explore the solar system and collect knowledge about each celestial body. Collect letter fragments to reconstruct critical astronomical terms before time runs out!</p>
+                
+                <h3>Game Controls:</h3>
+                <div class="controls">
+                    <div class="control-section">
+                        <h4>Agent Red (Player 1)</h4>
+                        <p>W - Move Forward</p>
+                        <p>A - Move Left</p>
+                        <p>S - Move Down</p>
+                        <p>D - Move Right</p>
+                    </div>
+                    <div class="control-section">
+                        <h4>Agent Blue (Player 2)</h4>
+                        <p>Up Arrow Key - Move Forward</p>
+                        <p>Left Arrow Key - Move Left</p>
+                        <p>Down Arrow Key - Move Down</p>
+                        <p>Right Arrow Key - Move Right</p>
+                    </div>
+                    <div class="control-section">
+                        <h4>Agent Gold (Player 3)</h4>
+                        <p>I - Move Forward</p>
+                        <p>J - Move Left</p>
+                        <p>K - Move Down</p>
+                        <p>L - Move Right</p>
+                    </div>
+                </div>
+                
+                <p>Collect the correct letters to complete the astronomical term displayed at the bottom of the screen. You will be competing with your fellow agents to acquire the most letters. However, retrieving wrong letters will reduce your score and time. You have 30 seconds to complete each word!</p>
+                
+                <p>Starting with Space exploration, you'll need to complete each celestial body mission to unlock the next one. Progress through Earth, Mars, Jupiter, and finally Pluto to become the ultimate solar system expert!</p>
+                
+                <div class="briefing-buttons">
+                    <button id="back-to-menu-btn" class="menu-button">Back to Menu</button>
+                    <button id="reset-progress-btn" class="menu-button">Reset Expedition</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="game-screen" class="screen hidden">
+            <div id="game-ui">
+                <div id="timer">Time: <span id="time-left">30</span></div>
+                <div id="level">Mission: <span id="current-level">1</span>/5</div>
+                <div id="score-container">
+                    <div class="player-score" id="player-red">Agent Red: <span>0</span></div>
+                    <div class="player-score" id="player-blue">Agent Blue: <span>0</span></div>
+                    <div class="player-score" id="player-gold">Agent Gold: <span>0</span></div>
+                </div>
+            </div>
+            
+            <div id="hint-container">
+                <div id="hint-label">Hint:</div>
+                <div id="hint-text"></div>
+            </div>
+            
+            <div id="game-canvas-container"></div>
+            
+            <div id="word-display">
+                <div id="word-prompt">Complete the term:</div>
+                <div id="word-container"></div>
+            </div>
+        </div>
+        
+        <div id="game-over-screen" class="screen hidden">
+            <h2>Mission Failed!</h2>
+            <div class="briefing-content">
+                <p>Time ran out. The celestial knowledge remains undiscovered...</p>
+                
+                <button id="try-again-btn" class="menu-button">Try Again</button>
+                <button id="game-over-back-btn" class="menu-button">Back to Menu</button>
+            </div>
+        </div>
+        
+        <div id="level-complete-screen" class="screen hidden">
+            <h2>Knowledge Acquired!</h2>
+            <div class="briefing-content">
+                <p>Preparing next cosmic exploration...</p>
+                
+                <div class="level-complete-buttons">
+                    <button id="next-level-btn" class="menu-button">Select Next Mission</button>
+                    <button id="level-complete-back-btn" class="menu-button">Back to Menu</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="game-complete-screen" class="screen hidden">
+            <h2>Mission Accomplished!</h2>
+            <div class="briefing-content">
+                <p>You've successfully explored the entire solar system!</p>
+                
+                <div id="final-scores">
+                    <div>Agent Red: <span id="final-red">0</span></div>
+                    <div>Agent Blue: <span id="final-blue">0</span></div>
+                    <div>Agent Gold: <span id="final-gold">0</span></div>
+                </div>
+                
+                <button id="play-again-btn" class="menu-button">New Expedition</button>
+                <button id="game-complete-back-btn" class="menu-button">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reset Progress Confirmation Modal -->
+    <div id="reset-confirmation-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Reset Progress</h3>
+            <p>Are you sure you want to reset all expedition progress? This will unlock only the Space level and cannot be undone.</p>
+            <div class="modal-buttons">
+                <button id="confirm-reset-btn" class="menu-button">Reset Progress</button>
+                <button id="cancel-reset-btn" class="menu-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="src/game3d.js"></script>
+</body>
+</html> 
