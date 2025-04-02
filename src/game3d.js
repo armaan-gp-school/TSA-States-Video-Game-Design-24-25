@@ -193,7 +193,8 @@ const soundEffects = {
     error: 'https://assets.mixkit.co/active_storage/sfx/885/885-preview.mp3',      // Wrong letter - quick negative beep
     levelComplete: 'https://assets.mixkit.co/active_storage/sfx/647/647-preview.mp3', // Level complete - achievement sound
     gameComplete: 'https://assets.mixkit.co/active_storage/sfx/220/220-preview.mp3',  // Game complete - victory tune
-    collect: 'https://assets.mixkit.co/active_storage/sfx/240/240-preview.mp3'     // Generic collection sound
+    collect: 'https://assets.mixkit.co/active_storage/sfx/240/240-preview.mp3',     // Generic collection sound
+    click: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'      // Short button click sound
 };
 
 // Audio context for sound effects
@@ -239,10 +240,72 @@ function init() {
     // Initialize sound system
     initSoundSystem();
     
+    // Add click sounds to buttons
+    addButtonClickSounds();
+    
     // Add start screen particles
     createStartScreenParticles();
     
     console.log("Game initialized");
+}
+
+// Add click sounds to all menu buttons except planet selection buttons
+function addButtonClickSounds() {
+    // Get all menu buttons
+    const menuButtons = document.querySelectorAll('.menu-button');
+    
+    // Add click sound to each button
+    menuButtons.forEach(button => {
+        // Skip planet selection buttons
+        const buttonText = button.textContent.trim();
+        if (["Space", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
+            return;
+        }
+        
+        // Add click sound
+        button.addEventListener('click', () => {
+            playSound('click', 0.3);
+        });
+    });
+    
+    // Also handle dynamically created buttons later
+    // Create a mutation observer to watch for new buttons
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.addedNodes) {
+                mutation.addedNodes.forEach(node => {
+                    // Check if the added node is a button or contains buttons
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        // If the node itself is a button
+                        if (node.classList && node.classList.contains('menu-button')) {
+                            const buttonText = node.textContent.trim();
+                            if (!["Space", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
+                                node.addEventListener('click', () => {
+                                    playSound('click', 0.3);
+                                });
+                            }
+                        }
+                        
+                        // If the node contains buttons
+                        const buttons = node.querySelectorAll('.menu-button');
+                        buttons.forEach(button => {
+                            const buttonText = button.textContent.trim();
+                            if (!["Space", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
+                                button.addEventListener('click', () => {
+                                    playSound('click', 0.3);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+    
+    // Start observing the document body for added nodes
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    console.log("Added click sounds to all menu buttons except planet selection buttons");
 }
 
 // Show the reset confirmation modal
