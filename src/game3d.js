@@ -448,20 +448,18 @@ function showLevelSelect() {
             const levelNumber = i + 1;
             const levelButton = document.getElementById(`level-${levelNumber}-btn`);
             
-            // Reset button
-            levelButton.classList.remove("locked");
-            levelButton.innerHTML = `${LEVEL_NAMES[i]}`;
-            
-            // Remove existing event listeners
-            const newButton = levelButton.cloneNode(true);
-            levelButton.parentNode.replaceChild(newButton, levelButton);
+            // Reset button state
+            levelButton.className = "level-button menu-button";
+            levelButton.id = `level-${levelNumber}-btn`;
+            levelButton.dataset.level = levelNumber;
+            levelButton.textContent = `${LEVEL_NAMES[i]}`;
             
             // Add locked class if level is not unlocked
             if (!isLevelUnlocked(levelNumber)) {
-                newButton.classList.add("locked");
+                levelButton.classList.add("locked");
             } else {
                 // Add click event listener for unlocked levels
-                newButton.addEventListener("click", () => {
+                levelButton.addEventListener("click", () => {
                     startLevel(levelNumber);
                 });
             }
