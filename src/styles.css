@@ -1143,10 +1143,33 @@ button {
     transform: scale(1.1);
 }
 
+.level-button.locked {
+    opacity: 0.6;
+    filter: grayscale(1);
+    background: linear-gradient(135deg, #3a3a8c, #252560);
+    border: 2px solid rgba(61, 90, 254, 0.1);
+    box-shadow: 0 0 10px rgba(61, 90, 254, 0.1);
+    cursor: not-allowed;
+}
+
+.level-button.locked:hover {
+    transform: none;
+    background: linear-gradient(135deg, #3a3a8c, #252560);
+    box-shadow: 0 0 10px rgba(61, 90, 254, 0.1);
+    border: 2px solid rgba(61, 90, 254, 0.1);
+    color: #e0e0ff;
+}
+
 .level-button.locked::before,
 .level-button.locked::after {
     opacity: 0.3;
     filter: grayscale(1);
+}
+
+.level-button.locked:hover::before,
+.level-button.locked:hover::after {
+    opacity: 0.3;
+    transform: none;
 }
 
 .lock-icon {
