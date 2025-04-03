@@ -415,11 +415,7 @@ function showLevelSelect() {
             levelButton.dataset.level = levelNumber;
             
             // Update button text with level name
-            if (LEVEL_NAMES[i] === "Space") {levelButton.textContent = `🌟 ${LEVEL_NAMES[i]} 🌟`}
-            else if (LEVEL_NAMES[i] === "Earth") {levelButton.textContent = `🌎 ${LEVEL_NAMES[i]} 🌎`}
-            else if (LEVEL_NAMES[i] === "Mars") {levelButton.textContent = `👽 ${LEVEL_NAMES[i]} 👽`}
-            else if (LEVEL_NAMES[i] === "Jupiter") {levelButton.textContent = `⚡️ ${LEVEL_NAMES[i]} ⚡️`}
-            else if (LEVEL_NAMES[i] === "Pluto") {levelButton.textContent = `❄️ ${LEVEL_NAMES[i]} ❄️`}
+            levelButton.textContent = `${LEVEL_NAMES[i]}`;
             
             // Add locked class if level is not unlocked
             if (!isLevelUnlocked(levelNumber)) {
