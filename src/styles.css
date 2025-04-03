@@ -268,22 +268,8 @@ button {
     font-weight: 800;
 }
 
-#briefing-screen h2::after {
-    content: '';
-    width: 60%;
-    height: 3px;
-    margin: 15px auto 0;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(93, 137, 255, 0.3), 
-        var(--primary-glow), 
-        rgba(93, 137, 255, 0.3), 
-        transparent);
-    position: absolute;
-    bottom: -15px;
-    left: 20%;
-    border-radius: 2px;
-    animation: line-pulse 3s infinite;
+#briefing-screen .magic-line {
+    margin: 0 auto 25px;
 }
 
 .briefing-content {
@@ -826,15 +812,23 @@ button {
     animation: line-pulse 3s infinite;
 }
 
-.magic-line::before {
+.magic-line::before,
+.magic-line::after {
     content: '';
     position: absolute;
-    top: -3px;
     left: 0;
     width: 100%;
     height: 10px;
     background: rgba(93, 137, 255, 0.1);
     filter: blur(3px);
+}
+
+.magic-line::before {
+    top: -3px;
+}
+
+.magic-line::after {
+    bottom: -3px;
 }
 
 #start-screen .menu {
@@ -897,6 +891,7 @@ button {
             var(--primary-glow), 
             rgba(93, 137, 255, 0.3), 
             transparent);
+        box-shadow: 0 0 5px var(--primary-glow);
     }
     50% {
         opacity: 1;
@@ -906,6 +901,7 @@ button {
             var(--secondary-glow), 
             rgba(93, 137, 255, 0.5), 
             transparent);
+        box-shadow: 0 0 15px var(--primary-glow);
     }
 }
 
@@ -1144,17 +1140,25 @@ button {
 
 /* Line pulse animation */
 @keyframes line-pulse {
-    0% {
-        opacity: 0.5;
+    0%, 100% {
+        opacity: 0.6;
+        background: linear-gradient(90deg, 
+            transparent, 
+            rgba(93, 137, 255, 0.3), 
+            var(--primary-glow), 
+            rgba(93, 137, 255, 0.3), 
+            transparent);
         box-shadow: 0 0 5px var(--primary-glow);
     }
     50% {
         opacity: 1;
+        background: linear-gradient(90deg, 
+            transparent, 
+            rgba(93, 137, 255, 0.5), 
+            var(--secondary-glow), 
+            rgba(93, 137, 255, 0.5), 
+            transparent);
         box-shadow: 0 0 15px var(--primary-glow);
-    }
-    100% {
-        opacity: 0.5;
-        box-shadow: 0 0 5px var(--primary-glow);
     }
 }
 
