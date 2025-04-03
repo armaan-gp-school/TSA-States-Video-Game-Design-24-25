@@ -421,14 +421,24 @@ button {
     padding: 15px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     background: linear-gradient(to bottom, rgba(16, 16, 36, 0.9), rgba(16, 16, 36, 0.7));
     z-index: 10;
     backdrop-filter: blur(5px);
     border-bottom: 1px solid rgba(93, 137, 255, 0.3);
+    gap: 15px;
 }
 
-#timer, #level {
-    font-size: 1.2em;
+#score-container {
+    display: flex;
+    gap: 15px;
+    min-width: 0;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+#timer, #level, .player-score {
+    font-size: 1em;
     font-weight: bold;
     padding: 8px 15px;
     background: linear-gradient(135deg, rgba(26, 26, 46, 0.7), rgba(36, 36, 66, 0.7));
@@ -436,6 +446,11 @@ button {
     position: relative;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(93, 137, 255, 0.2);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: fit-content;
 }
 
 #time-left {
@@ -474,22 +489,14 @@ button {
     100% { opacity: 0; transform: translateY(15px); }
 }
 
-#score-container {
-    display: flex;
-    gap: 15px;
-}
-
 .player-score {
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-weight: bold;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.7), rgba(36, 36, 66, 0.7));
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .player-score span {
     transition: all 0.2s ease;
+    margin-left: 5px;
 }
 
 .score-flash {
@@ -993,26 +1000,28 @@ button {
 /* Level select screen */
 #level-select-screen {
     background: radial-gradient(circle at center, rgba(26, 26, 58, 0.8) 0%, rgba(8, 8, 22, 0.95) 80%);
-    overflow: hidden;
+    overflow-y: auto;
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 40px;
+    padding: 20px;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 #level-select-screen::before {
     content: '';
-    position: absolute;
-    width: 200%;
-    height: 200%;
-    top: -50%;
-    left: -50%;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
     z-index: -1;
     background-image: 
         url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235d89ff' fill-opacity='0.07'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
     animation: slow-rotate 300s linear infinite;
 }
 
@@ -1031,8 +1040,8 @@ button {
 }
 
 #level-select-screen h2 {
-    font-size: 3.5em;
-    margin-bottom: 30px;
+    font-size: 2.5em;
+    margin: 20px 0;
     text-align: center;
     color: white;
     text-shadow: 
@@ -1044,42 +1053,33 @@ button {
     font-weight: 800;
 }
 
-#level-select-screen h2::after {
-    content: '';
-    width: 60%;
-    height: 3px;
-    margin: 15px auto 0;
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(93, 137, 255, 0.3), 
-        var(--primary-glow), 
-        rgba(93, 137, 255, 0.3), 
-        transparent);
-    position: absolute;
-    bottom: -15px;
-    left: 20%;
-    border-radius: 2px;
-    animation: line-pulse 3s infinite;
-}
-
 .level-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     gap: 15px;
-    margin: 20px 0 30px 0;
+    margin: 20px 0 40px 0;
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
+    position: relative;
+    z-index: 1;
+    min-height: min-content;
+    overflow: visible;
 }
 
 .level-button {
     position: relative;
-    width: 280px !important;
-    font-size: 1.4em !important;
+    width: 300px !important;
+    font-size: 1.2em !important;
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
     padding: 15px 30px !important;
+    margin: 10px 0 !important;
+    white-space: normal;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .level-button:hover:not(.locked) {
@@ -1114,8 +1114,58 @@ button {
 }
 
 #level-select-back-btn {
-    margin-top: 20px;
+    margin: 20px 0 40px 0;
     font-size: 1.2em;
+    width: 250px !important;
+    white-space: normal;
+    min-height: 50px;
+    position: relative;
+    z-index: 1;
+    padding: 10px 20px !important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
+    word-wrap: break-word;
+}
+
+@media (max-width: 600px) {
+    .level-button {
+        width: 90% !important;
+    }
+    
+    #level-select-back-btn {
+        width: 80% !important;
+        font-size: clamp(0.8em, 2vw, 1.2em) !important;
+        padding: 8px 15px !important;
+    }
+}
+
+@media (max-height: 600px) {
+    #level-select-screen {
+        padding: 10px;
+        justify-content: flex-start;
+        overflow-y: auto;
+    }
+    
+    .level-container {
+        gap: 5px;
+        margin: 5px 0;
+        min-height: min-content;
+    }
+    
+    .level-button {
+        padding: 8px 15px !important;
+        margin: 3px 0 !important;
+    }
+    
+    #level-select-back-btn {
+        margin: 5px 0;
+        font-size: clamp(0.8em, 2vh, 1.2em) !important;
+    }
 }
 
 /* Animation for rotating gradient background */
@@ -1325,4 +1375,39 @@ button {
     opacity: 0;
     animation: fade-in 0.5s ease forwards;
     animation-delay: 0.7s;
+}
+
+@media (max-height: 600px) {
+    #level-select-screen {
+        padding: 10px;
+        justify-content: flex-start;
+        overflow-y: auto;
+    }
+    
+    .level-container {
+        gap: 5px;
+        margin: 5px 0;
+        min-height: min-content;
+    }
+    
+    .level-button {
+        padding: 8px 15px !important;
+        margin: 3px 0 !important;
+    }
+    
+    #level-select-back-btn {
+        margin: 5px 0;
+        font-size: clamp(0.8em, 2vh, 1.2em) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .level-button {
+        width: 85vw !important;
+        font-size: clamp(0.8em, 2vw, 1.1em) !important;
+    }
+    
+    #level-select-back-btn {
+        width: 70vw !important;
+    }
 } 

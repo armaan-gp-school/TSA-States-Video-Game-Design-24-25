@@ -213,25 +213,30 @@ const audioBuffers = {};
 
 // Initialize the game
 function init() {
+    console.log("Initializing game...");
+    
     // Check if this is the first load or if a reset is requested
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('reset')) {
         resetAllProgress();
     }
     
-    // Load saved game progress first
+    // Load game progress
     loadGameProgress();
+    
+    // Load player scores
+    loadPlayerScores();
     
     // Add event listeners for menu buttons
     document.getElementById("start-btn").addEventListener("click", showLevelSelect);
     document.getElementById("briefing-btn").addEventListener("click", showBriefing);
     document.getElementById("back-to-menu-btn").addEventListener("click", showStartScreen);
     document.getElementById("try-again-btn").addEventListener("click", restartCurrentLevel);
-    document.getElementById("next-level-btn").addEventListener("click", showLevelSelect); // Changed from nextLevel to showLevelSelect
-    document.getElementById("play-again-btn").addEventListener("click", showResetConfirmationModal); // Changed from resetAllProgress to showResetConfirmationModal
+    document.getElementById("next-level-btn").addEventListener("click", showLevelSelect);
+    document.getElementById("play-again-btn").addEventListener("click", showResetConfirmationModal);
     document.getElementById("game-over-back-btn").addEventListener("click", showStartScreen);
     document.getElementById("game-complete-back-btn").addEventListener("click", showStartScreen);
-    document.getElementById("level-complete-back-btn").addEventListener("click", showStartScreen); // Changed from showLevelSelect to showStartScreen
+    document.getElementById("level-complete-back-btn").addEventListener("click", showStartScreen);
     
     // Add event listener for reset progress button
     document.getElementById("reset-progress-btn").addEventListener("click", showResetConfirmationModal);
@@ -244,19 +249,19 @@ function init() {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     
-    // Show the start screen
-    showStartScreen();
-
     // Initialize sound system
     initSoundSystem();
     
-    // Add click sounds to buttons
+    // Add button click sounds
     addButtonClickSounds();
     
-    // Add start screen particles
+    // Show start screen
+    showStartScreen();
+    
+    // Create start screen particles
     createStartScreenParticles();
     
-    console.log("Game initialized");
+    console.log("Game initialized successfully");
 }
 
 // Add click sounds to all menu buttons except planet selection buttons
@@ -365,7 +370,14 @@ function performResetProgress() {
 function resetAllProgress() {
     console.log("Resetting all game progress");
     localStorage.removeItem('completedLevels');
+    localStorage.removeItem('playerScores');
     completedLevels = [];
+    playerScores = {
+        red: 0,
+        blue: 0,
+        gold: 0
+    };
+    updateScoreDisplay();
 }
 
 // Show level selection screen
@@ -403,7 +415,11 @@ function showLevelSelect() {
             levelButton.dataset.level = levelNumber;
             
             // Update button text with level name
-            levelButton.textContent = `${LEVEL_NAMES[i]}`;
+            if (LEVEL_NAMES[i] === "Space") {levelButton.textContent = `🌟 ${LEVEL_NAMES[i]} 🌟`}
+            else if (LEVEL_NAMES[i] === "Earth") {levelButton.textContent = `🌎 ${LEVEL_NAMES[i]} 🌎`}
+            else if (LEVEL_NAMES[i] === "Mars") {levelButton.textContent = `👽 ${LEVEL_NAMES[i]} 👽`}
+            else if (LEVEL_NAMES[i] === "Jupiter") {levelButton.textContent = `⚡️ ${LEVEL_NAMES[i]} ⚡️`}
+            else if (LEVEL_NAMES[i] === "Pluto") {levelButton.textContent = `❄️ ${LEVEL_NAMES[i]} ❄️`}
             
             // Add locked class if level is not unlocked
             if (!isLevelUnlocked(levelNumber)) {
@@ -494,6 +510,9 @@ function startLevel(levelNumber) {
     // Update background for this level
     updateLevelBackground(levelNumber);
     
+    // Load saved scores before resetting game state
+    loadPlayerScores();
+    
     // Reset game state
     resetGameState();
     
@@ -526,11 +545,9 @@ function restartCurrentLevel() {
     // Reset the game state
     timeLeft = GAME_TIME;
     gameEnding = false;
-    playerScores = {
-        red: 0,
-        blue: 0,
-        gold: 0
-    };
+    
+    // Load saved scores
+    loadPlayerScores();
     
     // Reset player positions
     players.red.x = -5;
@@ -813,11 +830,6 @@ function resetGameState() {
     
     timeLeft = GAME_TIME;
     gameEnding = false; // Reset the gameEnding flag
-    playerScores = {
-        red: 0,
-        blue: 0,
-        gold: 0
-    };
     
     // Reset player positions
     players.red.x = -5;
@@ -902,12 +914,30 @@ function generateLetters() {
     const gridSpacing = spawnAreaSize / (gridSize - 1);
     const gridPositions = [];
     
-    // Generate grid positions
+    // Define default positions to avoid
+    const defaultPositions = [
+        {x: -5, z: 0},  // Red agent
+        {x: 0, z: 0},   // Blue agent
+        {x: 5, z: 0}    // Gold agent
+    ];
+    
+    // Generate grid positions, excluding default positions
     for (let x = 0; x < gridSize; x++) {
         for (let z = 0; z < gridSize; z++) {
             const posX = (x * gridSpacing - spawnAreaSize/2);
             const posZ = (z * gridSpacing - spawnAreaSize/2);
-            gridPositions.push({x: posX, z: posZ});
+            
+            // Check if this position is too close to any default position
+            const isTooCloseToDefault = defaultPositions.some(defaultPos => {
+                const dx = posX - defaultPos.x;
+                const dz = posZ - defaultPos.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                return distance < 2; // Minimum distance from default positions
+            });
+            
+            if (!isTooCloseToDefault) {
+                gridPositions.push({x: posX, z: posZ});
+            }
         }
     }
     
@@ -1278,6 +1308,21 @@ function checkLevelCompletion() {
                     clearInterval(timer);
                     startTimer();
                     console.log(`Timer reset to ${GAME_TIME} seconds for next word`);
+                    
+                    // Reset player positions to default
+                    players.red.x = -5;
+                    players.red.z = 0;
+                    players.blue.x = 0;
+                    players.blue.z = 0;
+                    players.gold.x = 5;
+                    players.gold.z = 0;
+                    
+                    // Update player meshes
+                    if (playerMeshes.red) {
+                        playerMeshes.red.position.set(players.red.x, AGENT_SIZE, players.red.z);
+                        playerMeshes.blue.position.set(players.blue.x, AGENT_SIZE, players.blue.z);
+                        playerMeshes.gold.position.set(players.gold.x, AGENT_SIZE, players.gold.z);
+                    }
                     
                     // Setup the next word
                     setupLevel(wordIndex + 1);
@@ -1964,6 +2009,9 @@ function collectLetter(letter, isCorrect, playerColor) {
                 const pointsEarned = letterCount * 10;
                 playerScores[playerColor] += pointsEarned;
                 updateScoreDisplay();
+                
+                // Save scores to localStorage
+                savePlayerScores();
                 
                 // Show a floating score indicator with player's color
                 showFloatingText(`+${pointsEarned}`, playerMeshes[playerColor].position, 0x5d89ff, playerColor);
@@ -3140,4 +3188,20 @@ function updateLevelBackground(levelNumber) {
     planet.userData.rotationSpeed = 0.001; // Speed of rotation
     
     console.log(`Created planet for level ${levelNumber} at position:`, planetPos);
+}
+
+// Save player scores to localStorage
+function savePlayerScores() {
+    localStorage.setItem('playerScores', JSON.stringify(playerScores));
+    console.log('Player scores saved:', playerScores);
+}
+
+// Load player scores from localStorage
+function loadPlayerScores() {
+    const savedScores = localStorage.getItem('playerScores');
+    if (savedScores) {
+        playerScores = JSON.parse(savedScores);
+        console.log('Player scores loaded:', playerScores);
+        updateScoreDisplay();
+    }
 }
