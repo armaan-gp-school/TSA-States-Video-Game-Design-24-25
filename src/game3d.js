@@ -2420,10 +2420,10 @@ function updateLevelBackground(levelNumber) {
             break;
             
         case 4: // Jupiter
-            planetSize = 55; // Larger size
-            planetColor = 0xcd8500; // Sandy brown
+            planetSize = 45; // Reduced from 55 to 45
+            planetColor = 0xd2b48c; // Beige color instead of sandy brown
             atmosphereColor = 0xffd700; // Gold for bands
-            planetPos = new THREE.Vector3(0, 0, -75); // Better balanced position
+            planetPos = new THREE.Vector3(0, 0, -63); // Better balanced position
             bgColor = 0x0a0a10; // Very dark blue
             break;
             
@@ -2746,20 +2746,20 @@ function updateLevelBackground(levelNumber) {
         
         // Create the bands
         const bands = [
-            { color: '#cd8500', width: 30 },  // Sandy brown
-            { color: '#bf7300', width: 40 },  // Darker brown
-            { color: '#e69900', width: 25 },  // Orange
-            { color: '#aa6600', width: 35 },  // Dark orange
-            { color: '#ffd700', width: 45 },  // Gold
-            { color: '#996300', width: 30 },  // Brown
-            { color: '#e6ac00', width: 50 },  // Light orange
-            { color: '#b37700', width: 20 },  // Brown
-            { color: '#ffcc00', width: 35 },  // Yellow
-            { color: '#a36b00', width: 40 },  // Dark brown
-            { color: '#ffbf00', width: 30 },  // Amber
-            { color: '#bf7300', width: 45 },  // Brown
-            { color: '#ffd700', width: 25 },  // Gold
-            { color: '#996300', width: 40 }   // Dark brown
+            { color: '#ead2ac', width: 30 },  // Beige
+            { color: '#eaba6b', width: 40 },  // Darker beige
+            { color: '#eae0cc', width: 25 },  // Light beige
+            { color: '#f3d3bd', width: 35 },  // Medium beige
+            { color: '#e68b64', width: 45 },  // Gold
+            { color: '#eaba6b', width: 30 },  // Darker beige
+            { color: '#eae0cc', width: 50 },  // Light beige
+            { color: '#f3d3bd', width: 20 },  // Medium beige
+            { color: '#f0c987', width: 35 },  // Yellow
+            { color: '#ead2ac', width: 40 },  // Beige
+            { color: '#e27658', width: 30 },  // Amber
+            { color: '#eaba6b', width: 45 },  // Darker beige
+            { color: '#e68b64', width: 25 },  // Gold
+            { color: '#f3d3bd', width: 40 }   // Medium beige
         ];
         
         let y = 0;
