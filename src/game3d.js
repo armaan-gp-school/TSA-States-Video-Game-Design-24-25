@@ -420,11 +420,6 @@ function showLevelSelect() {
             // Add locked class if level is not unlocked
             if (!isLevelUnlocked(levelNumber)) {
                 levelButton.classList.add("locked");
-                // Add lock icon
-                const lockIcon = document.createElement("span");
-                lockIcon.className = "lock-icon";
-                lockIcon.innerHTML = "🔒";
-                levelButton.appendChild(lockIcon);
             } else {
                 // Add click event listener for unlocked levels
                 levelButton.addEventListener("click", () => {
@@ -464,11 +459,6 @@ function showLevelSelect() {
             // Add locked class if level is not unlocked
             if (!isLevelUnlocked(levelNumber)) {
                 newButton.classList.add("locked");
-                // Add lock icon
-                const lockIcon = document.createElement("span");
-                lockIcon.className = "lock-icon";
-                lockIcon.innerHTML = "🔒";
-                newButton.appendChild(lockIcon);
             } else {
                 // Add click event listener for unlocked levels
                 newButton.addEventListener("click", () => {
