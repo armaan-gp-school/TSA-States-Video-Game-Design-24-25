@@ -111,6 +111,16 @@ let playerScores = {
 };
 let gameEnding = false; // Flag to prevent multiple end states
 let levelSelectionActive = false; // Flag to indicate if we're in level selection mode
+let playerTrails = {
+    red: [],
+    blue: [],
+    gold: []
+};
+let lastTrailTime = {
+    red: 0,
+    blue: 0,
+    gold: 0
+};
 
 // Three.js variables
 let scene, camera, renderer;
@@ -218,7 +228,7 @@ function init() {
     document.getElementById("back-to-menu-btn").addEventListener("click", showStartScreen);
     document.getElementById("try-again-btn").addEventListener("click", restartCurrentLevel);
     document.getElementById("next-level-btn").addEventListener("click", showLevelSelect); // Changed from nextLevel to showLevelSelect
-    document.getElementById("play-again-btn").addEventListener("click", resetGame);
+    document.getElementById("play-again-btn").addEventListener("click", showResetConfirmationModal); // Changed from resetAllProgress to showResetConfirmationModal
     document.getElementById("game-over-back-btn").addEventListener("click", showStartScreen);
     document.getElementById("game-complete-back-btn").addEventListener("click", showStartScreen);
     document.getElementById("level-complete-back-btn").addEventListener("click", showStartScreen); // Changed from showLevelSelect to showStartScreen
@@ -339,8 +349,15 @@ function performResetProgress() {
             setTimeout(() => notification.remove(), 500);
         }, 3000);
         
-        // Redirect to start screen
-        showStartScreen();
+        // Check if we're on the game complete screen
+        const gameCompleteScreen = document.getElementById("game-complete-screen");
+        if (!gameCompleteScreen.classList.contains("hidden")) {
+            // If on game complete screen, go to level select
+            showLevelSelect();
+        } else {
+            // Otherwise, go to start screen
+            showStartScreen();
+        }
     }, 300);
 }
 
@@ -609,8 +626,9 @@ function initThreeJS() {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
     
-    // Create futuristic floor
-    const floorGeometry = new THREE.PlaneGeometry(FLOOR_SIZE, FLOOR_SIZE);
+    // Create futuristic floor - match the grid size
+    const floorSize = 20; // Match the grid size
+    const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
     const floorMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x1a1a3a,
         metalness: 0.5,
@@ -621,8 +639,9 @@ function initThreeJS() {
     floor.position.y = -0.5;
     scene.add(floor);
     
-    // Add grid lines to floor
-    const gridHelper = new THREE.GridHelper(FLOOR_SIZE, 20, 0x3333cc, 0x222266);
+    // Add grid lines to floor - use a size that matches the player boundary
+    const gridSize = 20; // Size of the grid (10 units in each direction)
+    const gridHelper = new THREE.GridHelper(gridSize, 20, 0x3333cc, 0x222266);
     gridHelper.position.y = -0.49;
     scene.add(gridHelper);
     
@@ -861,7 +880,7 @@ function setupLevel(level) {
         wordContainer.appendChild(letterBox);
     }
     
-    // Generate letter objects to collect
+    // Generate letters to collect
     generateLetters();
     
     console.log(`Word ${level}/${wordList.length} setup complete.`);
@@ -875,20 +894,42 @@ function generateLetters() {
     const uniqueLetters = [...new Set(currentWord.split(''))];
     console.log(`Unique letters in word: ${uniqueLetters.join(', ')}`);
     
+    // Define a spawn area that takes up almost the entire grid
+    const spawnAreaSize = 18; // Increased from 9 to 18 to use more of the grid space
+    
+    // Create a grid of possible spawn positions
+    const gridSize = 5; // Increased from 4x4 to 5x5 for more positions
+    const gridSpacing = spawnAreaSize / (gridSize - 1);
+    const gridPositions = [];
+    
+    // Generate grid positions
+    for (let x = 0; x < gridSize; x++) {
+        for (let z = 0; z < gridSize; z++) {
+            const posX = (x * gridSpacing - spawnAreaSize/2);
+            const posZ = (z * gridSpacing - spawnAreaSize/2);
+            gridPositions.push({x: posX, z: posZ});
+        }
+    }
+    
+    // Shuffle the grid positions
+    for (let i = gridPositions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [gridPositions[i], gridPositions[j]] = [gridPositions[j], gridPositions[i]];
+    }
+    
     // Create correct letters (one instance per unique letter)
     for (let i = 0; i < uniqueLetters.length; i++) {
         const letter = uniqueLetters[i];
-        const x = (Math.random() - 0.5) * WORLD_SIZE;
-        const z = (Math.random() - 0.5) * WORLD_SIZE;
+        const position = gridPositions[i];
         
         letterObjects.push({
             letter: letter,
-            x: x,
-            z: z,
+            x: position.x,
+            z: position.z,
             correct: true
         });
         
-        createLetterMesh(letter, x, z, true);
+        createLetterMesh(letter, position.x, position.z, true);
     }
     
     // Add some wrong letters
@@ -898,20 +939,20 @@ function generateLetters() {
     // Add half as many wrong letters as correct ones
     const wrongLetterCount = Math.floor(uniqueLetters.length / 2);
     
+    // Use remaining grid positions for wrong letters
     for (let i = 0; i < wrongLetterCount; i++) {
         const randomIndex = Math.floor(Math.random() * wrongLetters.length);
         const letter = wrongLetters[randomIndex];
-        const x = (Math.random() - 0.5) * WORLD_SIZE;
-        const z = (Math.random() - 0.5) * WORLD_SIZE;
+        const position = gridPositions[uniqueLetters.length + i];
         
         letterObjects.push({
             letter: letter,
-            x: x,
-            z: z,
+            x: position.x,
+            z: position.z,
             correct: false
         });
         
-        createLetterMesh(letter, x, z, false);
+        createLetterMesh(letter, position.x, position.z, false);
     }
     
     console.log(`Generated ${letterObjects.length} letter objects (${letterMeshes.length} meshes)`);
@@ -1018,7 +1059,7 @@ function createLetterLabel(letter, parentMesh) {
     context.lineWidth = 16;
     context.strokeText(letter, canvas.width / 2, canvas.height / 2);
     
-    // Draw text in bright white for better contrast
+    // Draw text - use player's color
     context.fillStyle = '#ffffff';
     context.fillText(letter, canvas.width / 2, canvas.height / 2);
     
@@ -1573,6 +1614,9 @@ function handleKeyUp(e) {
 
 // Update player positions based on input
 function updatePlayers() {
+    const currentTime = Date.now();
+    const trailInterval = 67; // Reduced from 100ms to 67ms (50% more frequent)
+    
     // Player Red movement
     if (players.red.input.up) players.red.z -= PLAYER_SPEED;
     if (players.red.input.left) players.red.x -= PLAYER_SPEED;
@@ -1601,6 +1645,22 @@ function updatePlayers() {
     playerMeshes.blue.position.set(players.blue.x, AGENT_SIZE, players.blue.z);
     playerMeshes.gold.position.set(players.gold.x, AGENT_SIZE, players.gold.z);
     
+    // Create trail particles if player is moving
+    if (isPlayerMoving("red") && currentTime - lastTrailTime.red > trailInterval) {
+        createTrailParticle("red", players.red.x, players.red.z);
+        lastTrailTime.red = currentTime;
+    }
+    
+    if (isPlayerMoving("blue") && currentTime - lastTrailTime.blue > trailInterval) {
+        createTrailParticle("blue", players.blue.x, players.blue.z);
+        lastTrailTime.blue = currentTime;
+    }
+    
+    if (isPlayerMoving("gold") && currentTime - lastTrailTime.gold > trailInterval) {
+        createTrailParticle("gold", players.gold.x, players.gold.z);
+        lastTrailTime.gold = currentTime;
+    }
+    
     // Make player labels always face the camera
     Object.values(playerMeshes).forEach(mesh => {
         if (mesh.userData.labelSprite) {
@@ -1609,13 +1669,79 @@ function updatePlayers() {
     });
 }
 
+// Check if a player is moving
+function isPlayerMoving(playerId) {
+    const player = players[playerId];
+    return player.input.up || player.input.down || player.input.left || player.input.right;
+}
+
 // Keep player within bounds
 function keepPlayerInBounds(player) {
-    const boundarySize = FLOOR_SIZE / 2 - AGENT_SIZE;
+    // Use a slightly larger boundary size to allow more movement while still keeping players visible
+    // The camera is positioned at (0, 12, 15) looking at (0, 0, 0), so we need to keep players
+    // within a reasonable distance from the center to ensure they're visible
+    const boundarySize = 10; // Increased from 8 to 10 to allow more movement
+    
     if (player.x < -boundarySize) player.x = -boundarySize;
     if (player.x > boundarySize) player.x = boundarySize;
     if (player.z < -boundarySize) player.z = -boundarySize;
     if (player.z > boundarySize) player.z = boundarySize;
+}
+
+// Create a trail particle for a player
+function createTrailParticle(playerId, x, z) {
+    // Create a small sphere for the trail particle
+    const geometry = new THREE.SphereGeometry(AGENT_SIZE * 0.3, 8, 8);
+    const material = new THREE.MeshBasicMaterial({
+        color: players[playerId].color,
+        transparent: true,
+        opacity: 0.7
+    });
+    
+    const particle = new THREE.Mesh(geometry, material);
+    particle.position.set(x, AGENT_SIZE * 0.5, z);
+    scene.add(particle);
+    
+    // Add to player's trail array
+    playerTrails[playerId].push({
+        mesh: particle,
+        createdAt: Date.now(),
+        opacity: 0.7
+    });
+    
+    // Limit the number of trail particles per player
+    if (playerTrails[playerId].length > 10) {
+        const oldestTrail = playerTrails[playerId].shift();
+        scene.remove(oldestTrail.mesh);
+    }
+}
+
+// Update trail particles
+function updateTrails() {
+    const currentTime = Date.now();
+    const trailDuration = 1000; // Trail particles last for 1 second
+    
+    // Update each player's trail particles
+    Object.keys(playerTrails).forEach(playerId => {
+        for (let i = playerTrails[playerId].length - 1; i >= 0; i--) {
+            const trail = playerTrails[playerId][i];
+            const age = currentTime - trail.createdAt;
+            
+            if (age > trailDuration) {
+                // Remove expired trail particles
+                scene.remove(trail.mesh);
+                playerTrails[playerId].splice(i, 1);
+            } else {
+                // Fade out trail particles over time
+                const progress = age / trailDuration;
+                trail.mesh.material.opacity = trail.opacity * (1 - progress);
+                
+                // Make trail particles slightly smaller over time
+                const scale = 1 - (progress * 0.5);
+                trail.mesh.scale.set(scale, scale, scale);
+            }
+        }
+    });
 }
 
 // Animate letters with floating effect
@@ -2204,6 +2330,9 @@ function gameLoop() {
     // Update player positions
     updatePlayers();
     
+    // Update trail particles
+    updateTrails();
+    
     // Update letter meshes
     animateLetters();
     
@@ -2423,7 +2552,7 @@ function updateLevelBackground(levelNumber) {
             planetSize = 45; // Reduced from 55 to 45
             planetColor = 0xd2b48c; // Beige color instead of sandy brown
             atmosphereColor = 0xffd700; // Gold for bands
-            planetPos = new THREE.Vector3(0, 0, -63); // Better balanced position
+            planetPos = new THREE.Vector3(0, 0, -62); // Better balanced position
             bgColor = 0x0a0a10; // Very dark blue
             break;
             
