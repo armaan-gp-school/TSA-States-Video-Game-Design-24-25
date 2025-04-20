@@ -13,29 +13,29 @@ const TOTAL_LEVELS = 5; // Total number of themed levels
 
 // Word banks for different space-themed levels
 const SPACE_WORDS = [
-    { word: "GALAXY", hint: "A vast system of stars, gas, and dust held together by gravity" },
-    { word: "NEBULA", hint: "A cloud of gas and dust in outer space" },
+    { word: "GALAXY", hint: "A vast system of stars, gas, and dust held together by gravity, Milky Way is one of them" },
+    { word: "ASTRONAUT", hint: "A person who travels in space, Neil Armstrong was the first of these to walk on the moon" },
     { word: "COMET", hint: "An icy object that releases gas as it orbits the sun" },
-    { word: "ASTEROID", hint: "A small rocky body orbiting the sun" },
+    { word: "PLANET", hint: "A massive circular object that orbits the sun, there are 8 of them" },
     { word: "SUPERNOVA", hint: "The explosive death of a star" },
-    { word: "SATELLITE", hint: "An object that orbits a planet" },
+    { word: "SATELLITE", hint: "An object that orbits a planet, the International Space Station is one" },
     { word: "CELESTIAL", hint: "Relating to the sky or outer space" },
-    { word: "COSMOS", hint: "The universe seen as a well-ordered whole" },
+    { word: "UNIVERSE", hint: "Makes up everything in existence, there are 100 billion galaxies in it" },
     { word: "ORBIT", hint: "The curved path of an object around a star or planet" },
     { word: "METEOR", hint: "A small body of matter that enters Earth's atmosphere" }
 ];
 
 const EARTH_WORDS = [
-    { word: "ATMOSPHERE", hint: "The envelope of gases surrounding Earth" },
-    { word: "OCEAN", hint: "A vast body of saltwater that covers most of Earth's surface" },
-    { word: "CONTINENT", hint: "One of Earth's main landmasses" },
+    { word: "ATMOSPHERE", hint: "The envelope of gases surrounding Earth, made up of mostly nitrogen and oxygen" },
+    { word: "OCEAN", hint: "A vast body of saltwater that covers most of Earth's surface, there are 5 of them" },
+    { word: "CONTINENT", hint: "One of Earth's main landmasses, there are 7 of them" },
     { word: "EQUATOR", hint: "An imaginary line dividing Earth into northern and southern hemispheres" },
-    { word: "MOUNTAIN", hint: "A large natural elevation of Earth's surface" },
-    { word: "RAINFOREST", hint: "A dense forest with high annual rainfall" },
+    { word: "MOUNTAIN", hint: "A large natural elevation of Earth's surface, Mount Everest is the highest" },
+    { word: "RAINFOREST", hint: "A dense forest with high annual rainfall, Amazon ______" },
     { word: "VOLCANO", hint: "An opening in Earth's crust from which lava erupts" },
-    { word: "GLACIER", hint: "A slowly moving mass of ice" },
+    { word: "GLACIER", hint: "A slowly moving mass of ice, mostly found in the North and South Poles" },
     { word: "CLIMATE", hint: "The weather conditions of an area over a long period" },
-    { word: "BIOSPHERE", hint: "All the areas on Earth where organisms live" }
+    { word: "MOON", hint: "A natural satellite that orbits Earth" }
 ];
 
 const MARS_WORDS = [
@@ -48,7 +48,7 @@ const MARS_WORDS = [
     { word: "POLAR", hint: "Mars has these icy caps at its north and south ends" },
     { word: "CRATER", hint: "A bowl-shaped depression formed by impact on Mars's surface" },
     { word: "CURIOSITY", hint: "Famous Mars rover that landed in 2012" },
-    { word: "PERSEVERANCE", hint: "Recent Mars rover that landed in 2021" }
+    { word: "RED", hint: "A word used to describe the color of Mars, Mars is the ___ planet" }
 ];
 
 const JUPITER_WORDS = [
@@ -70,7 +70,7 @@ const PLUTO_WORDS = [
     { word: "HEART", hint: "Nickname for Pluto's distinctive light-colored region" },
     { word: "NITROGEN", hint: "Main component of Pluto's thin atmosphere" },
     { word: "KUIPER", hint: "Belt beyond Neptune where Pluto is located" },
-    { word: "ICY", hint: "Pluto's surface is mostly made of this type of material" },
+    { word: "ICE", hint: "Pluto's surface is mostly made of this material" },
     { word: "HORIZONS", hint: "NASA's New ___ mission explored Pluto in 2015" },
     { word: "TOMBAUGH", hint: "Astronomer who discovered Pluto" },
     { word: "MOUNTAINS", hint: "Pluto has ranges of these made of water ice" },
