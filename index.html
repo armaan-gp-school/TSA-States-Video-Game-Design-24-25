@@ -20,6 +20,7 @@
             <div class="menu">
                 <button id="start-btn" class="menu-button">Start Mission</button>
                 <button id="briefing-btn" class="menu-button">Briefing</button>
+                <button id="store-btn" class="menu-button">Agent Store</button>
             </div>
         </div>
         
@@ -126,6 +127,54 @@
                 
                 <button id="play-again-btn" class="menu-button">Reset Expedition</button>
                 <button id="game-complete-back-btn" class="menu-button">Back to Menu</button>
+            </div>
+        </div>
+        
+        <div id="store-screen" class="screen hidden">
+            <h2>Agent Store</h2>
+            <div class="magic-line"></div>
+            <div class="briefing-content">
+                <div class="store-columns">
+                    <div class="store-column red">
+                        <div class="agent-score red">Agent Red: <span id="store-red">0</span></div>
+                        <div class="column-content">
+                            <div class="speed-info">
+                                <p>Current Speed: <span id="red-current-speed">0.15</span></p>
+                                <p>Next Upgrade: <span id="red-next-speed">0.18</span></p>
+                                <p>Upgrade Cost: <span id="red-upgrade-cost">100</span></p>
+                                <p>Upgrades Left: <span id="red-upgrades-left">3</span></p>
+                            </div>
+                            <button id="red-speed-upgrade" class="upgrade-button">Upgrade Speed</button>
+                        </div>
+                    </div>
+                    <div class="store-column blue">
+                        <div class="agent-score blue">Agent Blue: <span id="store-blue">0</span></div>
+                        <div class="column-content">
+                            <div class="speed-info">
+                                <p>Current Speed: <span id="blue-current-speed">0.15</span></p>
+                                <p>Next Upgrade: <span id="blue-next-speed">0.18</span></p>
+                                <p>Upgrade Cost: <span id="blue-upgrade-cost">100</span></p>
+                                <p>Upgrades Left: <span id="blue-upgrades-left">3</span></p>
+                            </div>
+                            <button id="blue-speed-upgrade" class="upgrade-button">Upgrade Speed</button>
+                        </div>
+                    </div>
+                    <div class="store-column gold">
+                        <div class="agent-score gold">Agent Gold: <span id="store-gold">0</span></div>
+                        <div class="column-content">
+                            <div class="speed-info">
+                                <p>Current Speed: <span id="gold-current-speed">0.15</span></p>
+                                <p>Next Upgrade: <span id="gold-next-speed">0.18</span></p>
+                                <p>Upgrade Cost: <span id="gold-upgrade-cost">100</span></p>
+                                <p>Upgrades Left: <span id="gold-upgrades-left">3</span></p>
+                            </div>
+                            <button id="gold-speed-upgrade" class="upgrade-button">Upgrade Speed</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="store-buttons">
+                    <button id="store-back-btn" class="menu-button">Back to Menu</button>
+                </div>
             </div>
         </div>
     </div>

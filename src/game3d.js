@@ -1,7 +1,9 @@
 // Game constants
 const GAME_WIDTH = 1000;
 const GAME_HEIGHT = 700;
-const PLAYER_SPEED = 0.15;
+const PLAYER_SPEED_RED = 0.15;    // Red agent is standard speed
+const PLAYER_SPEED_BLUE = 0.15;   // Blue agent is slightly slower
+const PLAYER_SPEED_GOLD = 0.15;   // Gold agent is faster
 const GAME_TIME = 30; // seconds
 const AGENT_SIZE = 0.5;
 const LETTER_SIZE = 0.4;
@@ -153,6 +155,80 @@ const players = {
     }
 };
 
+// Add these constants at the top with other constants
+const SPEED_UPGRADE_COSTS = [100, 200, 300];
+const SPEED_UPGRADE_VALUES = [0.18, 0.21, 0.24];
+const BASE_SPEED = 0.15;
+
+// Add these objects to store player speeds and upgrades
+const playerSpeeds = {
+    red: BASE_SPEED,
+    blue: BASE_SPEED,
+    gold: BASE_SPEED
+};
+
+const speedUpgrades = {
+    red: 0,
+    blue: 0,
+    gold: 0
+};
+
+// Add this function to save speed upgrades
+function saveSpeedUpgrades() {
+    localStorage.setItem('playerSpeeds', JSON.stringify(playerSpeeds));
+    localStorage.setItem('speedUpgrades', JSON.stringify(speedUpgrades));
+}
+
+// Add this function to load speed upgrades
+function loadSpeedUpgrades() {
+    const savedSpeeds = localStorage.getItem('playerSpeeds');
+    const savedUpgrades = localStorage.getItem('speedUpgrades');
+    
+    if (savedSpeeds) {
+        Object.assign(playerSpeeds, JSON.parse(savedSpeeds));
+    }
+    if (savedUpgrades) {
+        Object.assign(speedUpgrades, JSON.parse(savedUpgrades));
+    }
+}
+
+// Add this function to handle speed upgrades
+function upgradeSpeed(color) {
+    console.log(`Attempting to upgrade speed for ${color} agent`);
+    
+    const currentUpgrades = speedUpgrades[color];
+    if (currentUpgrades >= 3) {
+        console.log(`${color} agent has reached maximum upgrades`);
+            return;
+        }
+        
+    const cost = SPEED_UPGRADE_COSTS[currentUpgrades];
+    if (playerScores[color] < cost) {
+        console.log(`${color} agent doesn't have enough points for upgrade`);
+        return;
+    }
+    
+    // Deduct points
+    playerScores[color] -= cost;
+    console.log(`Deducted ${cost} points from ${color} agent`);
+    
+    // Apply upgrade
+    playerSpeeds[color] = SPEED_UPGRADE_VALUES[currentUpgrades];
+    speedUpgrades[color]++;
+    console.log(`Upgraded ${color} agent speed to ${playerSpeeds[color]}`);
+    
+    // Save changes
+                savePlayerScores();
+    saveSpeedUpgrades();
+    
+    // Update displays
+            updateScoreDisplay();
+    updateSpeedDisplay();
+    
+    // Play success sound
+    playSound('success', 0.3);
+}
+
 // Function to select random words for a specific level
 function selectRandomWordsForLevel(levelIndex, count = 5) {
     // Get the appropriate word bank for this level
@@ -260,6 +336,21 @@ function init() {
     
     // Create start screen particles
     createStartScreenParticles();
+    
+    // Add this with your other event listeners in the init function
+    document.getElementById("store-btn").addEventListener("click", showStore);
+    document.getElementById("store-back-btn").addEventListener("click", showStartScreen);
+    
+    // Load speed upgrades
+    loadSpeedUpgrades();
+    
+    // Add event listeners for speed upgrade buttons
+    ['red', 'blue', 'gold'].forEach(color => {
+        const upgradeButton = document.getElementById(`${color}-speed-upgrade`);
+        if (upgradeButton) {
+            upgradeButton.addEventListener('click', () => upgradeSpeed(color));
+        }
+    });
     
     console.log("Game initialized successfully");
 }
@@ -371,12 +462,19 @@ function resetAllProgress() {
     console.log("Resetting all game progress");
     localStorage.removeItem('completedLevels');
     localStorage.removeItem('playerScores');
+    localStorage.removeItem('playerSpeeds');
+    localStorage.removeItem('speedUpgrades');
     completedLevels = [];
     playerScores = {
         red: 0,
         blue: 0,
         gold: 0
     };
+    // Reset speeds to base values
+    Object.keys(playerSpeeds).forEach(color => {
+        playerSpeeds[color] = BASE_SPEED;
+        speedUpgrades[color] = 0;
+    });
     updateScoreDisplay();
 }
 
@@ -582,11 +680,18 @@ function restartCurrentLevel() {
 
 // Show start screen
 function showStartScreen() {
+    console.log("Showing start screen");
     hideAllScreens();
     startScreen.classList.remove("hidden");
     
-    // Recreate particle effect for the start screen
-    createStartScreenParticles();
+    // Check if all levels are completed
+    const allLevelsCompleted = completedLevels.includes(TOTAL_LEVELS);
+    
+    // Hide reset progress button if all levels are completed
+    const resetProgressBtn = document.getElementById("reset-progress-btn");
+    if (resetProgressBtn) {
+        resetProgressBtn.style.display = allLevelsCompleted ? 'none' : 'block';
+    }
 }
 
 // Show briefing screen
@@ -1458,6 +1563,18 @@ function gameComplete() {
         gameCompleteText.textContent = "You've successfully explored the entire solar system!";
     }
     
+    // Hide the reset progress button since all levels are completed
+    const resetProgressBtn = document.getElementById("reset-progress-btn");
+    if (resetProgressBtn) {
+        resetProgressBtn.style.display = 'none';
+    }
+    
+    // Hide the play again button in the game complete screen
+    const playAgainBtn = document.getElementById("play-again-btn");
+    if (playAgainBtn) {
+        playAgainBtn.style.display = 'none';
+    }
+    
     // Determine the winner
     const scores = [
         { player: "Agent Red", score: playerScores.red },
@@ -1647,57 +1764,64 @@ function handleKeyUp(e) {
 
 // Update player positions based on input
 function updatePlayers() {
-    const currentTime = Date.now();
-    const trailInterval = 67; // Reduced from 100ms to 67ms (50% more frequent)
-    
-    // Player Red movement
-    if (players.red.input.up) players.red.z -= PLAYER_SPEED;
-    if (players.red.input.left) players.red.x -= PLAYER_SPEED;
-    if (players.red.input.down) players.red.z += PLAYER_SPEED;
-    if (players.red.input.right) players.red.x += PLAYER_SPEED;
-    
-    // Player Blue movement
-    if (players.blue.input.up) players.blue.z -= PLAYER_SPEED;
-    if (players.blue.input.left) players.blue.x -= PLAYER_SPEED;
-    if (players.blue.input.down) players.blue.z += PLAYER_SPEED;
-    if (players.blue.input.right) players.blue.x += PLAYER_SPEED;
-    
-    // Player Gold movement
-    if (players.gold.input.up) players.gold.z -= PLAYER_SPEED;
-    if (players.gold.input.left) players.gold.x -= PLAYER_SPEED;
-    if (players.gold.input.down) players.gold.z += PLAYER_SPEED;
-    if (players.gold.input.right) players.gold.x += PLAYER_SPEED;
-    
+    // Red player movement
+    if (players.red.input.up) players.red.z -= playerSpeeds.red;
+    if (players.red.input.down) players.red.z += playerSpeeds.red;
+    if (players.red.input.left) players.red.x -= playerSpeeds.red;
+    if (players.red.input.right) players.red.x += playerSpeeds.red;
+
+    // Blue player movement
+    if (players.blue.input.up) players.blue.z -= playerSpeeds.blue;
+    if (players.blue.input.down) players.blue.z += playerSpeeds.blue;
+    if (players.blue.input.left) players.blue.x -= playerSpeeds.blue;
+    if (players.blue.input.right) players.blue.x += playerSpeeds.blue;
+
+    // Gold player movement
+    if (players.gold.input.up) players.gold.z -= playerSpeeds.gold;
+    if (players.gold.input.down) players.gold.z += playerSpeeds.gold;
+    if (players.gold.input.left) players.gold.x -= playerSpeeds.gold;
+    if (players.gold.input.right) players.gold.x += playerSpeeds.gold;
+
     // Keep players within bounds
     keepPlayerInBounds(players.red);
     keepPlayerInBounds(players.blue);
     keepPlayerInBounds(players.gold);
-    
-    // Update player meshes
-    playerMeshes.red.position.set(players.red.x, AGENT_SIZE, players.red.z);
-    playerMeshes.blue.position.set(players.blue.x, AGENT_SIZE, players.blue.z);
-    playerMeshes.gold.position.set(players.gold.x, AGENT_SIZE, players.gold.z);
-    
-    // Create trail particles if player is moving
-    if (isPlayerMoving("red") && currentTime - lastTrailTime.red > trailInterval) {
-        createTrailParticle("red", players.red.x, players.red.z);
-        lastTrailTime.red = currentTime;
+
+    // Update player meshes and create trail particles
+    const currentTime = Date.now();
+    const trailInterval = 100; // Time between trail particles in milliseconds
+
+    // Update red player
+    if (playerMeshes.red) {
+        playerMeshes.red.position.set(players.red.x, AGENT_SIZE, players.red.z);
+        if (isPlayerMoving('red') && currentTime - lastTrailTime.red > trailInterval) {
+            createTrailParticle('red', players.red.x, players.red.z);
+            lastTrailTime.red = currentTime;
+        }
     }
-    
-    if (isPlayerMoving("blue") && currentTime - lastTrailTime.blue > trailInterval) {
-        createTrailParticle("blue", players.blue.x, players.blue.z);
-        lastTrailTime.blue = currentTime;
+
+    // Update blue player
+    if (playerMeshes.blue) {
+        playerMeshes.blue.position.set(players.blue.x, AGENT_SIZE, players.blue.z);
+        if (isPlayerMoving('blue') && currentTime - lastTrailTime.blue > trailInterval) {
+            createTrailParticle('blue', players.blue.x, players.blue.z);
+            lastTrailTime.blue = currentTime;
+        }
     }
-    
-    if (isPlayerMoving("gold") && currentTime - lastTrailTime.gold > trailInterval) {
-        createTrailParticle("gold", players.gold.x, players.gold.z);
-        lastTrailTime.gold = currentTime;
+
+    // Update gold player
+    if (playerMeshes.gold) {
+        playerMeshes.gold.position.set(players.gold.x, AGENT_SIZE, players.gold.z);
+        if (isPlayerMoving('gold') && currentTime - lastTrailTime.gold > trailInterval) {
+            createTrailParticle('gold', players.gold.x, players.gold.z);
+            lastTrailTime.gold = currentTime;
+        }
     }
-    
+
     // Make player labels always face the camera
     Object.values(playerMeshes).forEach(mesh => {
-        if (mesh.userData.labelSprite) {
-            mesh.userData.labelSprite.lookAt(camera.position);
+        if (mesh.children[0]) {
+            mesh.children[0].lookAt(camera.position);
         }
     });
 }
@@ -2238,9 +2362,19 @@ function updateWordDisplay() {
 
 // Update score display
 function updateScoreDisplay() {
+    // Update game UI scores
     document.querySelector("#player-red span").textContent = playerScores.red;
     document.querySelector("#player-blue span").textContent = playerScores.blue;
     document.querySelector("#player-gold span").textContent = playerScores.gold;
+    
+    // Update store scores if they exist
+    const storeRed = document.getElementById("store-red");
+    const storeBlue = document.getElementById("store-blue");
+    const storeGold = document.getElementById("store-gold");
+    
+    if (storeRed) storeRed.textContent = playerScores.red;
+    if (storeBlue) storeBlue.textContent = playerScores.blue;
+    if (storeGold) storeGold.textContent = playerScores.gold;
 }
 
 // Show floating text for score changes
@@ -3193,3 +3327,47 @@ function loadPlayerScores() {
         updateScoreDisplay();
     }
 }
+
+// Add this new function to show the store
+function showStore() {
+    console.log("Showing store screen");
+    hideAllScreens();
+    
+    // Update store scores
+    document.getElementById("store-red").textContent = playerScores.red;
+    document.getElementById("store-blue").textContent = playerScores.blue;
+    document.getElementById("store-gold").textContent = playerScores.gold;
+    
+    // Update speed displays
+    updateSpeedDisplay();
+    
+    // Show the store screen
+    document.getElementById("store-screen").classList.remove("hidden");
+}
+
+// Add this function to update the store display
+function updateSpeedDisplay() {
+    ['red', 'blue', 'gold'].forEach(color => {
+        const currentSpeedEl = document.getElementById(`${color}-current-speed`);
+        const nextSpeedEl = document.getElementById(`${color}-next-speed`);
+        const upgradeCostEl = document.getElementById(`${color}-upgrade-cost`);
+        const upgradesLeftEl = document.getElementById(`${color}-upgrades-left`);
+        const upgradeButton = document.getElementById(`${color}-speed-upgrade`);
+        
+        currentSpeedEl.textContent = playerSpeeds[color].toFixed(2);
+        
+        const upgradesLeft = 3 - speedUpgrades[color];
+        upgradesLeftEl.textContent = upgradesLeft;
+        
+        if (upgradesLeft > 0) {
+            nextSpeedEl.textContent = SPEED_UPGRADE_VALUES[speedUpgrades[color]].toFixed(2);
+            upgradeCostEl.textContent = SPEED_UPGRADE_COSTS[speedUpgrades[color]];            upgradeButton.disabled = playerScores[color] < SPEED_UPGRADE_COSTS[speedUpgrades[color]];
+        } else {
+            nextSpeedEl.textContent = "MAX";
+            upgradeCostEl.textContent = "MAX";
+            upgradeButton.disabled = true;
+        }
+    });
+}
+
+// Add this function to handle speed upgrades
