@@ -15,6 +15,7 @@
     --light-bg: #26264c;
     --border-glow: 0 0 20px rgba(93, 137, 255, 0.5);
     --text-glow: 0 0 10px rgba(93, 137, 255, 0.7);
+    --ui-scale: 1;
 }
 
 body {
@@ -418,29 +419,48 @@ button {
     top: 0;
     left: 0;
     width: 100%;
-    padding: 15px;
+    padding: 1.5vh;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     background: linear-gradient(to bottom, rgba(16, 16, 36, 0.9), rgba(16, 16, 36, 0.7));
     z-index: 10;
     backdrop-filter: blur(5px);
     border-bottom: 1px solid rgba(93, 137, 255, 0.3);
-    gap: 15px;
+    min-height: 8vh; /* Ensure consistent height for game UI */
+}
+
+#game-ui-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2vw;
+    width: 98%;
+    margin: 0 auto;
+}
+
+#game-stats-container {
+    display: flex;
+    align-items: center;
+    gap: 1.2vw;
+    padding: 0.6vh 1vw;
+    border-radius: 8px;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 #score-container {
     display: flex;
-    gap: 15px;
+    gap: 1.2vw;
+    align-items: center;
+    flex-shrink: 1;
     min-width: 0;
-    flex: 1;
-    justify-content: flex-end;
 }
 
 #timer, #level, .player-score {
-    font-size: 1em;
+    font-size: clamp(0.8em, 1.4vw, 1em);
     font-weight: bold;
-    padding: 8px 15px;
+    padding: 0.8vh 1.2vw;
     background: linear-gradient(135deg, rgba(26, 26, 46, 0.7), rgba(36, 36, 66, 0.7));
     border-radius: 8px;
     position: relative;
@@ -450,7 +470,14 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: fit-content;
+    min-width: 0;
+    flex-shrink: 1;
+    transform-origin: left center;
+    scale: var(--ui-scale, 1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: fit-content;
+    line-height: 1.2;
 }
 
 #time-left {
@@ -496,7 +523,7 @@ button {
 
 .player-score span {
     transition: all 0.2s ease;
-    margin-left: 5px;
+    margin-left: 0.3em;
 }
 
 .score-flash {
@@ -535,42 +562,33 @@ button {
 
 #hint-container {
     position: absolute;
-    top: 70px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    z-index: 10;
+    top: calc(8vh + 1.5vh); /* Position below game-ui (game-ui height + padding) */
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    justify-content: center;
+    flex-direction: row;
     align-items: center;
-    gap: 12px;
-    background: linear-gradient(135deg, rgba(26, 26, 46, 0.8), rgba(36, 36, 66, 0.8));
-    padding: 10px 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
-    font-size: 1.1em;
-    max-width: 80%;
-    margin: 0 auto;
+    justify-content: center;
+    gap: 1vw;
+    padding: 1vh 2vw;
+    background: linear-gradient(135deg, rgba(26, 26, 46, 0.7), rgba(36, 36, 66, 0.7));
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(93, 137, 255, 0.2);
-    backdrop-filter: blur(5px);
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    z-index: 9;
+    width: auto;
+    max-width: 90%;
 }
 
 #hint-label {
     font-weight: bold;
     color: var(--primary-glow);
-    text-shadow: 0 0 8px rgba(93, 137, 255, 0.5);
+    white-space: nowrap;
 }
 
 #hint-text {
-    font-style: italic;
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    line-height: 1.4;
+    font-size: 0.95em;
+    text-align: center;
 }
 
 #word-prompt {
@@ -629,22 +647,33 @@ button {
 
 /* Media queries for responsiveness */
 @media (max-width: 768px) {
-    #game-container {
-        width: 100vw;
-        height: 100vw;
-        max-width: 100vh;
-        max-height: 100vh;
+    #game-ui-container {
+        gap: 1.2vw;
     }
     
+    #game-stats-container,
+    #score-container {
+        gap: 1vw;
+        padding: 0.6vh 0.8vw;
+    }
+    
+    #timer, #level, .player-score {
+        font-size: clamp(0.7em, 1.1vw, 0.9em);
+        padding: 0.6vh 0.8vw;
+    }
+    
+    :root {
+        --ui-scale: 0.9;
+    }
+
+    #game-ui {
+        min-height: 10vh; /* Slightly taller on mobile */
+    }
+
     #hint-container {
-        max-width: 95%;
+        top: calc(10vh + 1.5vh); /* Adjust for mobile game-ui height */
+        padding: 0.8vh 1.5vw;
         font-size: 0.9em;
-    }
-    
-    .letter-box {
-        width: 30px;
-        height: 40px;
-        font-size: 1.2em;
     }
 }
 
@@ -1134,7 +1163,7 @@ button {
     opacity: 0.7;
     transition: opacity 0.3s ease, transform 0.3s ease;
     right: 15px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235d89ff'%3E%3Cpath d='M12 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-5h-1V6c0-2.76-2.24-5-5-5-2.28 0-4.27 1.54-4.84 3.75-.14.54.18 1.08.72 1.22.53.14 1.08-.18 1.22-.72C9.44 3.93 10.63 3 12 3c1.65 0 3 1.35 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235d89ff'%3E%3Cpath d='M12 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-5h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z'/%3E%3C/svg%3E");
 }
 
 /* Locked level button icon - override the default unlocked icon */
@@ -1146,7 +1175,7 @@ button {
 
 /* Ensure unlocked levels have the correct icon */
 .level-button:not(.locked)::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235d89ff'%3E%3Cpath d='M12 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-5h-1V6c0-2.76-2.24-5-5-5-2.28 0-4.27 1.54-4.84 3.75-.14.54.18 1.08.72 1.22.53.14 1.08-.18 1.22-.72C9.44 3.93 10.63 3 12 3c1.65 0 3 1.35 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235d89ff'%3E%3Cpath d='M12 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6-5h-1V6c0-2.76-2.24-5-5-5-2.28 0-4.27 1.54-4.84 3.75-.14.54.18 1.08.72 1.22.53.14 1.08-.18 1.22-.72C9.44 3.93 10.63 3 12 3c1.65 0 3 1.35 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z'/%3E%3C/svg%3E");
     opacity: 0.7;
     filter: none;
 }
@@ -1497,4 +1526,37 @@ button {
     #level-select-back-btn {
         width: 70vw !important;
     }
+}
+
+@media screen and (min-width: 1200px) {
+    :root {
+        --ui-scale: 0.95;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #game-ui-container {
+        gap: 1.2vw;
+    }
+    
+    #game-stats-container,
+    #score-container {
+        gap: 1.2vw;
+        padding: 0.6vh 0.8vw;
+    }
+    
+    #timer, #level, .player-score {
+        font-size: clamp(0.7em, 1.1vw, 0.9em);
+        padding: 0.6vh 0.8vw;
+    }
+    
+    :root {
+        --ui-scale: 0.9;
+    }
+}
+
+/* Ensure text remains readable with proper spacing */
+#timer span, #level span, .player-score span {
+    margin-left: 0.3em;
+    display: inline-block;
 } 
