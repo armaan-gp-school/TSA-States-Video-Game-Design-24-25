@@ -560,7 +560,7 @@ function showLevelSelect() {
         
         // Add title
         const title = document.createElement("h2");
-        title.textContent = "Select Mission";
+        title.textContent = "Select Expedition";
         levelSelectScreen.appendChild(title);
         
         // Create container for level buttons
