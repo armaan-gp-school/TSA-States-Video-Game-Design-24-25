@@ -276,6 +276,7 @@ function upgradeSpeed(color) {
     // Update displays
     updateScoreDisplay();
     updateSpeedDisplay();
+    updateTrailDisplay(); // Add this line to update trail button states
     document.getElementById(`store-${color}`).textContent = playerScores[color];
     
     // Play success sound
@@ -3482,6 +3483,7 @@ function upgradeSpeed(color) {
     // Update displays
     updateScoreDisplay();
     updateSpeedDisplay();
+    updateTrailDisplay(); // Add this line to update trail button states
     document.getElementById(`store-${color}`).textContent = playerScores[color];
     
     // Play success sound
