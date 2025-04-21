@@ -1766,68 +1766,51 @@ button {
 
 /* Speed upgrade styling */
 .speed-info {
-    background: rgba(26, 26, 46, 0.8);
+    background: rgba(0, 0, 0, 0.3);
     padding: 15px;
-    border-radius: 8px;
-    margin: 15px 0;
-    width: 90%;
-    text-align: center;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.speed-info p {
+.trail-info {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 20px;
+}
+
+.speed-info p, .trail-info p {
     margin: 8px 0;
     font-size: 0.9em;
-    color: #fff;
+    color: #e0e0ff;
 }
 
 .upgrade-button {
-    background: linear-gradient(135deg, rgba(93, 137, 255, 0.4), rgba(93, 137, 255, 0.2));
-    border: 1px solid rgba(93, 137, 255, 0.3);
-    padding: 10px 20px;
-    border-radius: 6px;
-    color: #fff;
-    font-size: 1em;
+    width: 100%;
+    padding: 12px;
+    border-radius: 5px;
+    border: none;
+    background: linear-gradient(135deg, #3a3a8c, #252560);
+    color: #e0e0ff;
+    font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-top: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .upgrade-button:hover {
-    background: linear-gradient(135deg, rgba(93, 137, 255, 0.6), rgba(93, 137, 255, 0.4));
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, #45aaf2, #5d89ff);
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(93, 137, 255, 0.5);
 }
 
 .upgrade-button:disabled {
-    background: rgba(50, 50, 50, 0.4);
-    border-color: rgba(80, 80, 80, 0.3);
+    background: #2a2a4a;
+    color: #666;
     cursor: not-allowed;
     transform: none;
-}
-
-/* Agent-specific upgrade button colors */
-.store-column.red .upgrade-button {
-    background: linear-gradient(135deg, rgba(255, 50, 50, 0.4), rgba(255, 50, 50, 0.2));
-    border-color: rgba(255, 70, 70, 0.3);
-}
-
-.store-column.red .upgrade-button:hover {
-    background: linear-gradient(135deg, rgba(255, 50, 50, 0.6), rgba(255, 50, 50, 0.4));
-}
-
-.store-column.blue .upgrade-button {
-    background: linear-gradient(135deg, rgba(50, 50, 255, 0.4), rgba(50, 50, 255, 0.2));
-    border-color: rgba(70, 70, 255, 0.3);
-}
-
-.store-column.blue .upgrade-button:hover {
-    background: linear-gradient(135deg, rgba(50, 50, 255, 0.6), rgba(50, 50, 255, 0.4));
-}
-
-.store-column.gold .upgrade-button {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 215, 0, 0.2));
-    border-color: rgba(255, 215, 0, 0.3);
-}
-
-.store-column.gold .upgrade-button:hover {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.6), rgba(255, 215, 0, 0.4));
+    box-shadow: none;
 }

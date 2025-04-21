@@ -155,10 +155,18 @@ const players = {
     }
 };
 
-// Add these constants at the top with other constants
+// Speed constants
+const BASE_SPEED = 0.15;
 const SPEED_UPGRADE_COSTS = [100, 200, 300];
 const SPEED_UPGRADE_VALUES = [0.18, 0.21, 0.24];
-const BASE_SPEED = 0.15;
+
+// Trail upgrade constants
+const TRAIL_UPGRADE_COSTS = [100, 200, 300];
+const TRAIL_UPGRADE_VALUES = [
+    { size: 0.4, opacity: 0.8, duration: 1200, count: 12 },
+    { size: 0.5, opacity: 0.9, duration: 1500, count: 15 },
+    { size: 0.6, opacity: 1.0, duration: 1800, count: 18 }
+];
 
 // Add these objects to store player speeds and upgrades
 const playerSpeeds = {
@@ -173,23 +181,67 @@ const speedUpgrades = {
     gold: 0
 };
 
-// Add this function to save speed upgrades
-function saveSpeedUpgrades() {
+const trailUpgrades = {
+    red: 0,
+    blue: 0,
+    gold: 0
+};
+
+// Add this function to save upgrades
+function saveUpgrades() {
     localStorage.setItem('playerSpeeds', JSON.stringify(playerSpeeds));
     localStorage.setItem('speedUpgrades', JSON.stringify(speedUpgrades));
+    localStorage.setItem('trailUpgrades', JSON.stringify(trailUpgrades));
 }
 
-// Add this function to load speed upgrades
-function loadSpeedUpgrades() {
+// Add this function to load upgrades
+function loadUpgrades() {
     const savedSpeeds = localStorage.getItem('playerSpeeds');
-    const savedUpgrades = localStorage.getItem('speedUpgrades');
+    const savedSpeedUpgrades = localStorage.getItem('speedUpgrades');
+    const savedTrailUpgrades = localStorage.getItem('trailUpgrades');
     
     if (savedSpeeds) {
         Object.assign(playerSpeeds, JSON.parse(savedSpeeds));
     }
-    if (savedUpgrades) {
-        Object.assign(speedUpgrades, JSON.parse(savedUpgrades));
+    if (savedSpeedUpgrades) {
+        Object.assign(speedUpgrades, JSON.parse(savedSpeedUpgrades));
     }
+    if (savedTrailUpgrades) {
+        Object.assign(trailUpgrades, JSON.parse(savedTrailUpgrades));
+    }
+}
+
+// Add this function to handle trail upgrades
+function upgradeTrail(color) {
+    console.log(`Attempting to upgrade trail for ${color} agent`);
+    
+    const currentUpgrades = trailUpgrades[color];
+    if (currentUpgrades >= 3) {
+        console.log(`${color} agent has reached maximum trail upgrades`);
+        return;
+    }
+    
+    const upgradeCost = TRAIL_UPGRADE_COSTS[currentUpgrades];
+    if (playerScores[color] < upgradeCost) {
+        console.log(`${color} agent doesn't have enough points for trail upgrade`);
+        return;
+    }
+    
+    // Deduct points and apply upgrade
+    playerScores[color] -= upgradeCost;
+    trailUpgrades[color]++;
+    saveUpgrades();
+    savePlayerScores();
+    
+    console.log(`${color} agent trail upgraded to level ${trailUpgrades[color]}`);
+    
+    // Update displays
+    updateScoreDisplay();
+    updateTrailDisplay();
+    document.getElementById(`store-${color}`).textContent = playerScores[color];
+    
+    // Play success sound
+    playSound('success', 0.3);
 }
 
 // Add this function to handle speed upgrades
@@ -199,9 +251,9 @@ function upgradeSpeed(color) {
     const currentUpgrades = speedUpgrades[color];
     if (currentUpgrades >= 3) {
         console.log(`${color} agent has reached maximum upgrades`);
-            return;
-        }
-        
+        return;
+    }
+    
     const cost = SPEED_UPGRADE_COSTS[currentUpgrades];
     if (playerScores[color] < cost) {
         console.log(`${color} agent doesn't have enough points for upgrade`);
@@ -218,12 +270,13 @@ function upgradeSpeed(color) {
     console.log(`Upgraded ${color} agent speed to ${playerSpeeds[color]}`);
     
     // Save changes
-                savePlayerScores();
-    saveSpeedUpgrades();
+    savePlayerScores();
+    saveUpgrades();
     
     // Update displays
-            updateScoreDisplay();
+    updateScoreDisplay();
     updateSpeedDisplay();
+    document.getElementById(`store-${color}`).textContent = playerScores[color];
     
     // Play success sound
     playSound('success', 0.3);
@@ -342,13 +395,21 @@ function init() {
     document.getElementById("store-back-btn").addEventListener("click", showStartScreen);
     
     // Load speed upgrades
-    loadSpeedUpgrades();
+    loadUpgrades();
     
     // Add event listeners for speed upgrade buttons
     ['red', 'blue', 'gold'].forEach(color => {
         const upgradeButton = document.getElementById(`${color}-speed-upgrade`);
         if (upgradeButton) {
             upgradeButton.addEventListener('click', () => upgradeSpeed(color));
+        }
+    });
+    
+    // Add event listeners for trail upgrade buttons
+    ['red', 'blue', 'gold'].forEach(color => {
+        const upgradeButton = document.getElementById(`${color}-trail-upgrade`);
+        if (upgradeButton) {
+            upgradeButton.addEventListener('click', () => upgradeTrail(color));
         }
     });
     
@@ -464,6 +525,7 @@ function resetAllProgress() {
     localStorage.removeItem('playerScores');
     localStorage.removeItem('playerSpeeds');
     localStorage.removeItem('speedUpgrades');
+    localStorage.removeItem('trailUpgrades');
     completedLevels = [];
     playerScores = {
         red: 0,
@@ -474,6 +536,7 @@ function resetAllProgress() {
     Object.keys(playerSpeeds).forEach(color => {
         playerSpeeds[color] = BASE_SPEED;
         speedUpgrades[color] = 0;
+        trailUpgrades[color] = 0;
     });
     updateScoreDisplay();
 }
@@ -1789,12 +1852,19 @@ function updatePlayers() {
 
     // Update player meshes and create trail particles
     const currentTime = Date.now();
-    const trailInterval = 100; // Time between trail particles in milliseconds
+    
+    // Base trail interval that decreases with upgrades
+    const getTrailInterval = (color) => {
+        const baseInterval = 100; // Base interval in milliseconds
+        const upgradeLevel = trailUpgrades[color];
+        // Each upgrade level reduces the interval by 20ms
+        return Math.max(20, baseInterval - (upgradeLevel * 20));
+    };
 
     // Update red player
     if (playerMeshes.red) {
         playerMeshes.red.position.set(players.red.x, AGENT_SIZE, players.red.z);
-        if (isPlayerMoving('red') && currentTime - lastTrailTime.red > trailInterval) {
+        if (isPlayerMoving('red') && currentTime - lastTrailTime.red > getTrailInterval('red')) {
             createTrailParticle('red', players.red.x, players.red.z);
             lastTrailTime.red = currentTime;
         }
@@ -1803,7 +1873,7 @@ function updatePlayers() {
     // Update blue player
     if (playerMeshes.blue) {
         playerMeshes.blue.position.set(players.blue.x, AGENT_SIZE, players.blue.z);
-        if (isPlayerMoving('blue') && currentTime - lastTrailTime.blue > trailInterval) {
+        if (isPlayerMoving('blue') && currentTime - lastTrailTime.blue > getTrailInterval('blue')) {
             createTrailParticle('blue', players.blue.x, players.blue.z);
             lastTrailTime.blue = currentTime;
         }
@@ -1812,7 +1882,7 @@ function updatePlayers() {
     // Update gold player
     if (playerMeshes.gold) {
         playerMeshes.gold.position.set(players.gold.x, AGENT_SIZE, players.gold.z);
-        if (isPlayerMoving('gold') && currentTime - lastTrailTime.gold > trailInterval) {
+        if (isPlayerMoving('gold') && currentTime - lastTrailTime.gold > getTrailInterval('gold')) {
             createTrailParticle('gold', players.gold.x, players.gold.z);
             lastTrailTime.gold = currentTime;
         }
@@ -1847,12 +1917,20 @@ function keepPlayerInBounds(player) {
 
 // Create a trail particle for a player
 function createTrailParticle(playerId, x, z) {
+    const upgradeLevel = trailUpgrades[playerId];
+    const trailValues = upgradeLevel > 0 ? TRAIL_UPGRADE_VALUES[upgradeLevel - 1] : {
+        size: 0.3,
+        opacity: 0.7,
+        duration: 1000,
+        count: 10
+    };
+    
     // Create a small sphere for the trail particle
-    const geometry = new THREE.SphereGeometry(AGENT_SIZE * 0.3, 8, 8);
+    const geometry = new THREE.SphereGeometry(AGENT_SIZE * trailValues.size, 8, 8);
     const material = new THREE.MeshBasicMaterial({
         color: players[playerId].color,
         transparent: true,
-        opacity: 0.7
+        opacity: trailValues.opacity
     });
     
     const particle = new THREE.Mesh(geometry, material);
@@ -1863,11 +1941,12 @@ function createTrailParticle(playerId, x, z) {
     playerTrails[playerId].push({
         mesh: particle,
         createdAt: Date.now(),
-        opacity: 0.7
+        opacity: trailValues.opacity,
+        duration: trailValues.duration
     });
     
-    // Limit the number of trail particles per player
-    if (playerTrails[playerId].length > 10) {
+    // Limit the number of trail particles per player based on upgrade level
+    if (playerTrails[playerId].length > trailValues.count) {
         const oldestTrail = playerTrails[playerId].shift();
         scene.remove(oldestTrail.mesh);
     }
@@ -1876,7 +1955,6 @@ function createTrailParticle(playerId, x, z) {
 // Update trail particles
 function updateTrails() {
     const currentTime = Date.now();
-    const trailDuration = 1000; // Trail particles last for 1 second
     
     // Update each player's trail particles
     Object.keys(playerTrails).forEach(playerId => {
@@ -1884,13 +1962,13 @@ function updateTrails() {
             const trail = playerTrails[playerId][i];
             const age = currentTime - trail.createdAt;
             
-            if (age > trailDuration) {
+            if (age > trail.duration) {
                 // Remove expired trail particles
                 scene.remove(trail.mesh);
                 playerTrails[playerId].splice(i, 1);
             } else {
                 // Fade out trail particles over time
-                const progress = age / trailDuration;
+                const progress = age / trail.duration;
                 trail.mesh.material.opacity = trail.opacity * (1 - progress);
                 
                 // Make trail particles slightly smaller over time
@@ -3338,8 +3416,9 @@ function showStore() {
     document.getElementById("store-blue").textContent = playerScores.blue;
     document.getElementById("store-gold").textContent = playerScores.gold;
     
-    // Update speed displays
+    // Update displays
     updateSpeedDisplay();
+    updateTrailDisplay();
     
     // Show the store screen
     document.getElementById("store-screen").classList.remove("hidden");
@@ -3361,7 +3440,8 @@ function updateSpeedDisplay() {
         
         if (upgradesLeft > 0) {
             nextSpeedEl.textContent = SPEED_UPGRADE_VALUES[speedUpgrades[color]].toFixed(2);
-            upgradeCostEl.textContent = SPEED_UPGRADE_COSTS[speedUpgrades[color]];            upgradeButton.disabled = playerScores[color] < SPEED_UPGRADE_COSTS[speedUpgrades[color]];
+            upgradeCostEl.textContent = SPEED_UPGRADE_COSTS[speedUpgrades[color]];
+            upgradeButton.disabled = playerScores[color] < SPEED_UPGRADE_COSTS[speedUpgrades[color]];
         } else {
             nextSpeedEl.textContent = "MAX";
             upgradeCostEl.textContent = "MAX";
@@ -3371,3 +3451,99 @@ function updateSpeedDisplay() {
 }
 
 // Add this function to handle speed upgrades
+function upgradeSpeed(color) {
+    console.log(`Attempting to upgrade speed for ${color} agent`);
+    
+    const currentUpgrades = speedUpgrades[color];
+    if (currentUpgrades >= 3) {
+        console.log(`${color} agent has reached maximum upgrades`);
+        return;
+    }
+    
+    const cost = SPEED_UPGRADE_COSTS[currentUpgrades];
+    if (playerScores[color] < cost) {
+        console.log(`${color} agent doesn't have enough points for upgrade`);
+        return;
+    }
+    
+    // Deduct points
+    playerScores[color] -= cost;
+    console.log(`Deducted ${cost} points from ${color} agent`);
+    
+    // Apply upgrade
+    playerSpeeds[color] = SPEED_UPGRADE_VALUES[currentUpgrades];
+    speedUpgrades[color]++;
+    console.log(`Upgraded ${color} agent speed to ${playerSpeeds[color]}`);
+    
+    // Save changes
+    savePlayerScores();
+    saveUpgrades();
+    
+    // Update displays
+    updateScoreDisplay();
+    updateSpeedDisplay();
+    document.getElementById(`store-${color}`).textContent = playerScores[color];
+    
+    // Play success sound
+    playSound('success', 0.3);
+}
+
+// Add this function to handle trail upgrades
+function upgradeTrail(color) {
+    console.log(`Attempting to upgrade trail for ${color} agent`);
+    
+    const currentUpgrades = trailUpgrades[color];
+    if (currentUpgrades >= 3) {
+        console.log(`${color} agent has reached maximum trail upgrades`);
+        return;
+    }
+    
+    const upgradeCost = TRAIL_UPGRADE_COSTS[currentUpgrades];
+    if (playerScores[color] < upgradeCost) {
+        console.log(`${color} agent doesn't have enough points for trail upgrade`);
+        return;
+    }
+    
+    // Deduct points and apply upgrade
+    playerScores[color] -= upgradeCost;
+    trailUpgrades[color]++;
+    saveUpgrades();
+    savePlayerScores();
+    
+    console.log(`${color} agent trail upgraded to level ${trailUpgrades[color]}`);
+    
+    // Update displays
+    updateScoreDisplay();
+    updateTrailDisplay();
+    document.getElementById(`store-${color}`).textContent = playerScores[color];
+    
+    // Play success sound
+    playSound('success', 0.3);
+}
+
+// Add this function to update the trail display
+function updateTrailDisplay() {
+    ['red', 'blue', 'gold'].forEach(color => {
+        const currentTrailEl = document.getElementById(`${color}-current-trail`);
+        const nextTrailEl = document.getElementById(`${color}-next-trail`);
+        const trailUpgradeCostEl = document.getElementById(`${color}-trail-upgrade-cost`);
+        const trailUpgradesLeftEl = document.getElementById(`${color}-trail-upgrades-left`);
+        const trailUpgradeButton = document.getElementById(`${color}-trail-upgrade`);
+        
+        const currentLevel = trailUpgrades[color];
+        currentTrailEl.textContent = currentLevel === 0 ? "Basic" : `Level ${currentLevel}`;
+        
+        const upgradesLeft = 3 - currentLevel;
+        trailUpgradesLeftEl.textContent = upgradesLeft;
+        
+        if (upgradesLeft > 0) {
+            nextTrailEl.textContent = `Level ${currentLevel + 1}`;
+            trailUpgradeCostEl.textContent = TRAIL_UPGRADE_COSTS[currentLevel];
+            trailUpgradeButton.disabled = playerScores[color] < TRAIL_UPGRADE_COSTS[currentLevel];
+        } else {
+            nextTrailEl.textContent = "MAX";
+            trailUpgradeCostEl.textContent = "MAX";
+            trailUpgradeButton.disabled = true;
+        }
+    });
+}
