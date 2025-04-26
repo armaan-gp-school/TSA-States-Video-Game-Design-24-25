@@ -2219,12 +2219,12 @@ function collectLetter(letter, isCorrect, playerColor) {
         } else {
             console.log(`Player ${playerColor} collected incorrect letter: ${letter}`);
             
-            // Wrong letter - subtract 7 points
-            playerScores[playerColor] = Math.max(0, playerScores[playerColor] - 7);
+            // Wrong letter - subtract 5 points
+            playerScores[playerColor] = Math.max(0, playerScores[playerColor] - 5);
             updateScoreDisplay();
             
-            // Deduct 7 seconds from the timer
-            deductTime(7);
+            // Deduct 5 seconds from the timer
+            deductTime(5);
             
             // Show a floating score indicator with player's color
             showFloatingText(`-7`, playerMeshes[playerColor].position, 0xff5d5d, playerColor);
