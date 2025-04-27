@@ -744,17 +744,16 @@ function restartCurrentLevel() {
 
 // Show start screen
 function showStartScreen() {
-    console.log("Showing start screen");
     hideAllScreens();
     startScreen.classList.remove("hidden");
     
     // Check if all levels are completed
     const allLevelsCompleted = completedLevels.includes(TOTAL_LEVELS);
     
-    // Hide reset progress button if all levels are completed
+    // Always show reset progress button
     const resetProgressBtn = document.getElementById("reset-progress-btn");
     if (resetProgressBtn) {
-        resetProgressBtn.style.display = allLevelsCompleted ? 'none' : 'block';
+        resetProgressBtn.style.display = 'block';
     }
 }
 
