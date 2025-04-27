@@ -371,6 +371,9 @@ function init() {
     // Add event listener for reset progress button
     document.getElementById("reset-progress-btn").addEventListener("click", showResetConfirmationModal);
     
+    // Add event listener for agent store button
+    document.getElementById("agent-store-btn").addEventListener("click", showStore);
+    
     // Add event listeners for confirmation modal buttons
     document.getElementById("confirm-reset-btn").addEventListener("click", performResetProgress);
     document.getElementById("cancel-reset-btn").addEventListener("click", hideResetConfirmationModal);
