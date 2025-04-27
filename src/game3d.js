@@ -12,17 +12,17 @@ const FLOOR_SIZE = 30;
 const TOTAL_LEVELS = 5; // Total number of themed levels
 
 // Word banks for different space-themed levels
-const SPACE_WORDS = [
-    { word: "GALAXY", hint: "A vast system of stars, gas, and dust held together by gravity, Milky Way is one of them" },
-    { word: "ASTRONAUT", hint: "A person who travels in space, Neil Armstrong was the first of these to walk on the moon" },
-    { word: "COMET", hint: "An icy object that releases gas as it orbits the sun" },
-    { word: "PLANET", hint: "A massive circular object that orbits the sun, there are 8 of them" },
-    { word: "SUPERNOVA", hint: "The explosive death of a star" },
-    { word: "SATELLITE", hint: "An object that orbits a planet, the International Space Station is one" },
-    { word: "CELESTIAL", hint: "Relating to the sky or outer space" },
-    { word: "UNIVERSE", hint: "Makes up everything in existence, there are 100 billion galaxies in it" },
-    { word: "ORBIT", hint: "The curved path of an object around a star or planet" },
-    { word: "METEOR", hint: "A small body of matter that enters Earth's atmosphere" }
+const SUN_WORDS = [
+    { word: "SUPERNOVA", hint: "A powerful explosion of a star, creating a brilliant burst of light" },
+    { word: "SOLAR", hint: "Relating to the Sun" },
+    { word: "CORONA", hint: "The outermost layer of the Sun's atmosphere, visible during a total solar eclipse" },
+    { word: "SUNSPOT", hint: "A dark spot on the Sun's surface, caused by magnetic activity" },
+    { word: "RADIATION", hint: "Energy emitted by the Sun in the form of electromagnetic waves" },
+    { word: "ULTRAVIOLET", hint: "The part of the electromagnetic spectrum that is invisible to the human eye" },
+    { word: "SOLARFLARE", hint: "A sudden flash of increased brightness on the Sun's surface" },
+    { word: "STELLAR", hint: "Relating to stars" },
+    { word: "ECLIPSE", hint: "When one celestial body passes in front of another, blocking its light" },
+    { word: "FUSION", hint: "The process of combining two atoms to form a single atom, how the Sun creates energy" }
 ];
 
 const EARTH_WORDS = [
@@ -79,7 +79,7 @@ const PLUTO_WORDS = [
 
 // All level word banks
 const LEVEL_WORD_BANKS = [
-    SPACE_WORDS,    // Level 1: Space
+    SUN_WORDS,    // Level 1: Sun
     EARTH_WORDS,    // Level 2: Earth
     MARS_WORDS,     // Level 3: Mars
     JUPITER_WORDS,  // Level 4: Jupiter
@@ -88,7 +88,7 @@ const LEVEL_WORD_BANKS = [
 
 // Level names for UI
 const LEVEL_NAMES = [
-    "Space",
+    "Sun",
     "Earth",
     "Mars",
     "Jupiter",
@@ -276,7 +276,7 @@ function upgradeSpeed(color) {
     // Update displays
     updateScoreDisplay();
     updateSpeedDisplay();
-    updateTrailDisplay(); // Add this line to update trail button states
+    updateTrailDisplay(); // Add this line to update trail buttons
     document.getElementById(`store-${color}`).textContent = playerScores[color];
     
     // Play success sound
@@ -371,9 +371,6 @@ function init() {
     // Add event listener for reset progress button
     document.getElementById("reset-progress-btn").addEventListener("click", showResetConfirmationModal);
     
-    // Add event listener for agent store button
-    document.getElementById("agent-store-btn").addEventListener("click", showStore);
-    
     // Add event listeners for confirmation modal buttons
     document.getElementById("confirm-reset-btn").addEventListener("click", performResetProgress);
     document.getElementById("cancel-reset-btn").addEventListener("click", hideResetConfirmationModal);
@@ -429,7 +426,7 @@ function addButtonClickSounds() {
     menuButtons.forEach(button => {
         // Skip planet selection buttons
         const buttonText = button.textContent.trim();
-        if (["Space", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
+        if (["Sun", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
             return;
         }
         
@@ -450,7 +447,7 @@ function addButtonClickSounds() {
                         // If the node itself is a button
                         if (node.classList && node.classList.contains('menu-button')) {
                             const buttonText = node.textContent.trim();
-                            if (!["Space", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
+                            if (!["Sun", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
                                 node.addEventListener('click', () => {
                                     playSound('click', 0.3);
                                 });
@@ -461,7 +458,7 @@ function addButtonClickSounds() {
                         const buttons = node.querySelectorAll('.menu-button');
                         buttons.forEach(button => {
                             const buttonText = button.textContent.trim();
-                            if (!["Space", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
+                            if (!["Sun", "Earth", "Mars", "Jupiter", "Pluto"].includes(buttonText)) {
                                 button.addEventListener('click', () => {
                                     playSound('click', 0.3);
                                 });
@@ -501,7 +498,7 @@ function performResetProgress() {
         // Create a notification element
         const notification = document.createElement("div");
         notification.className = "reset-notification";
-        notification.textContent = "Progress has been reset. Only Space level is now available.";
+        notification.textContent = "Progress has been reset. Only Sun level is now available.";
         document.body.appendChild(notification);
         
         // Remove the notification after a few seconds
@@ -670,7 +667,7 @@ function startLevel(levelNumber) {
     resetGameState();
     
     // Setup the level with the first word (1/5)
-    setupLevel(1);
+    setupLevel(1); // This is the word number within the level, not the game level
     
     // Start game loop
     gameRunning = true;
@@ -747,17 +744,15 @@ function restartCurrentLevel() {
 
 // Show start screen
 function showStartScreen() {
+    console.log("Showing start screen");
     hideAllScreens();
     startScreen.classList.remove("hidden");
     
     // Check if all levels are completed
     const allLevelsCompleted = completedLevels.includes(TOTAL_LEVELS);
     
-    // Always show reset progress button
+    // Hide reset progress button if all levels are completed
     const resetProgressBtn = document.getElementById("reset-progress-btn");
-    if (resetProgressBtn) {
-        resetProgressBtn.style.display = 'block';
-    }
 }
 
 // Show briefing screen
@@ -2221,12 +2216,12 @@ function collectLetter(letter, isCorrect, playerColor) {
         } else {
             console.log(`Player ${playerColor} collected incorrect letter: ${letter}`);
             
-            // Wrong letter - subtract 5 points
-            playerScores[playerColor] = Math.max(0, playerScores[playerColor] - 5);
+            // Wrong letter - subtract 7 points
+            playerScores[playerColor] = Math.max(0, playerScores[playerColor] - 7);
             updateScoreDisplay();
             
-            // Deduct 5 seconds from the timer
-            deductTime(5);
+            // Deduct 7 seconds from the timer
+            deductTime(7);
             
             // Show a floating score indicator with player's color
             showFloatingText(`-7`, playerMeshes[playerColor].position, 0xff5d5d, playerColor);
@@ -2596,6 +2591,21 @@ function gameLoop() {
         planet.rotation.y += planet.userData.rotationSpeed;
     }
     
+    // Update Sun's layers if they exist
+    const sunCore = scene.children.find(child => child.name === "sunCore");
+    const sunSurface = scene.children.find(child => child.name === "sunSurface");
+    const corona = scene.children.find(child => child.name === "corona");
+    
+    if (sunCore && sunCore.userData.rotationSpeed) {
+        sunCore.rotation.y += sunCore.userData.rotationSpeed;
+    }
+    if (sunSurface && sunSurface.userData.rotationSpeed) {
+        sunSurface.rotation.y += sunSurface.userData.rotationSpeed;
+    }
+    if (corona && corona.userData.rotationSpeed) {
+        corona.rotation.y += corona.userData.rotationSpeed;
+    }
+    
     // Render the scene
     renderer.render(scene, camera);
     
@@ -2730,7 +2740,7 @@ function loadGameProgress() {
         } else {
             // Reset completedLevels to ensure only level 1 is available on first load
             completedLevels = [];
-            console.log('No saved progress found. Only Space level is unlocked.');
+            console.log('No saved progress found. Only Sun level is unlocked.');
         }
     } catch (error) {
         console.error('Error loading game progress:', error);
@@ -2759,16 +2769,6 @@ function updateLevelBackground(levelNumber) {
         scene.remove(planet);
     });
     
-    // Space level (default)
-    if (levelNumber === 1) {
-        scene.background = new THREE.Color(0x000005);
-        scene.fog = new THREE.Fog(0x000005, 15, 40);
-        // Make sure stars are visible
-        const stars = scene.children.find(child => child.name === "stars");
-        if (stars) stars.visible = true;
-        return;
-    }
-    
     // Find existing skybox
     const skybox = scene.children.find(child => child.name === "skybox");
     if (skybox) {
@@ -2783,36 +2783,44 @@ function updateLevelBackground(levelNumber) {
     let planetSize, planetColor, atmosphereColor, planetPos, bgColor;
     
     switch(levelNumber) {
+        case 1: // Sun
+            planetSize = 25;
+            planetColor = 0xff4500;
+            atmosphereColor = 0xffd700;
+            planetPos = new THREE.Vector3(0, 0, -40);
+            bgColor = 0x000006;
+            break;
+            
         case 2: // Earth
-            planetSize = 40; // Larger size
-            planetColor = 0x1a66ff; // Blue
-            atmosphereColor = 0x6bb2ff; // Light blue
-            planetPos = new THREE.Vector3(0, 0, -55); // Better balanced position
-            bgColor = 0x000020; // Deep space blue
+            planetSize = 25;
+            planetColor = 0x1a66ff;
+            atmosphereColor = 0x4d94ff;
+            planetPos = new THREE.Vector3(0, 0, -40);
+            bgColor = 0x000006;
             break;
             
         case 3: // Mars
-            planetSize = 35; // Larger size
-            planetColor = 0xcc3300; // Red-orange
-            atmosphereColor = 0xff9966; // Dusty orange
-            planetPos = new THREE.Vector3(0, 0, -53); // Better balanced position
-            bgColor = 0x100804; // Dark red-tinted space
+            planetSize = 25;
+            planetColor = 0xcc3300;
+            atmosphereColor = 0xff6633;
+            planetPos = new THREE.Vector3(0, 0, -40);
+            bgColor = 0x000006;
             break;
             
         case 4: // Jupiter
-            planetSize = 45; // Reduced from 55 to 45
-            planetColor = 0xd2b48c; // Beige color instead of sandy brown
-            atmosphereColor = 0xffd700; // Gold for bands
-            planetPos = new THREE.Vector3(0, 0, -62); // Better balanced position
-            bgColor = 0x0a0a10; // Very dark blue
+            planetSize = 25;
+            planetColor = 0xd2b48c;
+            atmosphereColor = 0xffd700;
+            planetPos = new THREE.Vector3(0, 0, -40);
+            bgColor = 0x000006;
             break;
             
         case 5: // Pluto
-            planetSize = 25; // Larger size
-            planetColor = 0xcccccc; // Gray
-            atmosphereColor = 0xe6e6e6; // Light gray
-            planetPos = new THREE.Vector3(0, 0, -40); // Better balanced position
-            bgColor = 0x000006; // Almost black
+            planetSize = 25;
+            planetColor = 0xcccccc;
+            atmosphereColor = 0xe6e6e6;
+            planetPos = new THREE.Vector3(0, 0, -40);
+            bgColor = 0x000006;
             break;
             
         default:
@@ -2829,9 +2837,129 @@ function updateLevelBackground(levelNumber) {
     // Create planet sphere
     const planetGeometry = new THREE.SphereGeometry(planetSize, 64, 64);
     
-    // For Earth and Mars, create a textured material
     let planetMaterial;
-    if (levelNumber === 2) { // Earth
+    if (levelNumber === 1) { // Sun
+        // Create Sun's core
+        const sunCoreGeometry = new THREE.SphereGeometry(planetSize, 64, 64);
+        const sunCoreMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff4500,
+            transparent: true,
+            opacity: 0.9
+        });
+        const sunCore = new THREE.Mesh(sunCoreGeometry, sunCoreMaterial);
+        sunCore.position.copy(planetPos);
+        sunCore.name = "sunCore";
+        scene.add(sunCore);
+        
+        // Create Sun's surface layer with texture
+        const sunSurfaceGeometry = new THREE.SphereGeometry(planetSize * 1.02, 64, 64);
+        const sunCanvas = document.createElement('canvas');
+        sunCanvas.width = 2048;
+        sunCanvas.height = 1024;
+        const ctx = sunCanvas.getContext('2d');
+        
+        // Create detailed surface texture
+        const gradient = ctx.createRadialGradient(
+            sunCanvas.width/2, sunCanvas.height/2, 0,
+            sunCanvas.width/2, sunCanvas.height/2, sunCanvas.width/2
+        );
+        gradient.addColorStop(0, '#ff4500');    // Core
+        gradient.addColorStop(0.3, '#ff6b00');  // Inner surface
+        gradient.addColorStop(0.6, '#ff8c00');  // Middle surface
+        gradient.addColorStop(1, '#ffa500');    // Outer surface
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, sunCanvas.width, sunCanvas.height);
+        
+        // Add sunspots and granulation
+        for (let i = 0; i < 30; i++) {
+            const x = Math.random() * sunCanvas.width;
+            const y = Math.random() * sunCanvas.height;
+            const size = 20 + Math.random() * 40;
+            
+            // Sunspots
+            ctx.fillStyle = '#8B0000';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Granulation
+            ctx.fillStyle = '#ff6b00';
+            for (let j = 0; j < 5; j++) {
+                const gx = x + (Math.random() - 0.5) * size;
+                const gy = y + (Math.random() - 0.5) * size;
+                const gsize = 5 + Math.random() * 10;
+                ctx.beginPath();
+                ctx.arc(gx, gy, gsize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        const sunTexture = new THREE.CanvasTexture(sunCanvas);
+        const sunSurfaceMaterial = new THREE.MeshBasicMaterial({
+            map: sunTexture,
+            transparent: true,
+            opacity: 0.95
+        });
+        
+        const sunSurface = new THREE.Mesh(sunSurfaceGeometry, sunSurfaceMaterial);
+        sunSurface.position.copy(planetPos);
+        sunSurface.name = "sunSurface";
+        scene.add(sunSurface);
+        
+        // Create corona layer
+        const coronaGeometry = new THREE.SphereGeometry(planetSize * 1.1, 64, 64);
+        const coronaMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffd700,
+            transparent: true,
+            opacity: 0.3
+        });
+        const corona = new THREE.Mesh(coronaGeometry, coronaMaterial);
+        corona.position.copy(planetPos);
+        corona.name = "corona";
+        scene.add(corona);
+        
+        // Add solar flares
+        const flareGeometry = new THREE.ConeGeometry(planetSize * 0.2, planetSize * 0.5, 32);
+        const flareMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff4500,
+            transparent: true,
+            opacity: 0.6
+        });
+        
+        for (let i = 0; i < 8; i++) {
+            const flare = new THREE.Mesh(flareGeometry, flareMaterial);
+            const angle = (i / 8) * Math.PI * 2;
+            flare.position.set(
+                planetPos.x + Math.cos(angle) * planetSize * 0.8,
+                planetPos.y + Math.sin(angle) * planetSize * 0.8,
+                planetPos.z
+            );
+            flare.rotation.z = angle;
+            flare.name = "solarFlare";
+            scene.add(flare);
+        }
+        
+        // Add point lights for dynamic lighting
+        const coreLight = new THREE.PointLight(0xff4500, 2, 50);
+        coreLight.position.copy(planetPos);
+        scene.add(coreLight);
+        
+        const coronaLight = new THREE.PointLight(0xffd700, 1, 30);
+        coronaLight.position.copy(planetPos);
+        scene.add(coronaLight);
+        
+        // Add ambient light
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+        
+        // Add rotation animation
+        sunCore.userData = { rotationSpeed: 0.001 };
+        sunSurface.userData = { rotationSpeed: 0.0008 };
+        corona.userData = { rotationSpeed: 0.0006 };
+        
+        return; // Early return for Sun as it's handled differently
+    } else if (levelNumber === 2) { // Earth
         // Create Earth with blue oceans and green landmasses
         const earthCanvas = document.createElement('canvas');
         earthCanvas.width = 1024;
@@ -3485,7 +3613,7 @@ function upgradeSpeed(color) {
     // Update displays
     updateScoreDisplay();
     updateSpeedDisplay();
-    updateTrailDisplay(); // Add this line to update trail button states
+    updateTrailDisplay(); // Add this line to update trail buttons
     document.getElementById(`store-${color}`).textContent = playerScores[color];
     
     // Play success sound
@@ -3519,6 +3647,7 @@ function upgradeTrail(color) {
     // Update displays
     updateScoreDisplay();
     updateTrailDisplay();
+    updateSpeedDisplay();
     document.getElementById(`store-${color}`).textContent = playerScores[color];
     
     // Play success sound
