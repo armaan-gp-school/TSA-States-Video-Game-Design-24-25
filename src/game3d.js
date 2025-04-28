@@ -1624,12 +1624,6 @@ function gameComplete() {
         gameCompleteText.textContent = "You've successfully explored the entire solar system!";
     }
     
-    // Hide the reset progress button since all levels are completed
-    const resetProgressBtn = document.getElementById("reset-progress-btn");
-    if (resetProgressBtn) {
-        resetProgressBtn.style.display = 'none';
-    }
-    
     // Hide the play again button in the game complete screen
     const playAgainBtn = document.getElementById("play-again-btn");
     if (playAgainBtn) {
