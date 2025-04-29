@@ -1395,6 +1395,31 @@ function levelComplete() {
     gameRunning = false;
     clearInterval(timer);
     
+    // Remove ALL planet-related objects
+    if (scene) {
+        // Remove all planet parts
+        const planetParts = scene.children.filter(child => 
+            child.name === "planet" || 
+            child.name === "planetaryObject" || 
+            child.name === "sunCore" ||
+            child.name === "sunSurface" ||
+            child.name === "corona" ||
+            child.name === "solarFlare"
+        );
+        planetParts.forEach(part => {
+            scene.remove(part);
+        });
+        
+        // Remove planet-related lights
+        const planetLights = scene.children.filter(child => 
+            child instanceof THREE.PointLight && 
+            (child.name === "coreLight" || child.name === "coronaLight")
+        );
+        planetLights.forEach(light => {
+            scene.remove(light);
+        });
+    }
+    
     // Reset input states to prevent movement carrying over to next level
     Object.keys(players).forEach(playerId => {
         const player = players[playerId];
@@ -1714,6 +1739,9 @@ function nextLevel() {
     if (currentLevel <= wordList.length) {
         console.log(`Starting level ${currentLevel}`);
         
+        // Update the background for the new level before showing the game screen
+        updateLevelBackground(currentLevel);
+        
         // Show game screen with simple transition
         hideAllScreens();
         gameScreen.classList.remove("hidden");
@@ -1748,21 +1776,10 @@ function nextLevel() {
             player.input.right = false;
         });
         
-        // Setup next level
-        setupLevel(currentLevel);
-        
-        // Reset timer
-        timeLeft = GAME_TIME;
-        timeLeftDisplay.textContent = timeLeft;
-        startTimer();
-        
-        // Start game loop
-        gameRunning = true;
-        requestAnimationFrame(gameLoop);
-        
-        console.log("Next level started, game loop reactivated");
+        // Start the new level
+        startLevel(currentLevel);
     } else {
-        // Game complete
+        // All levels completed
         gameComplete();
     }
 }
